@@ -59,6 +59,8 @@ aliases['gr'] = 'git reset'
 aliases['gb'] = 'git branch'
 aliases['gch'] = 'git checkout'
 aliases['gm'] = 'git merge'
+aliases['gpl'] = 'git pull'
+aliases['gps'] = 'git push'
 
 aliases['_'] = 'sudo'
 aliases['c'] = 'clear'
