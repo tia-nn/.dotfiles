@@ -1,0 +1,125 @@
+# xonsh env
+
+$VI_MODE = False
+$IGNOREEOF = True
+$INDENT = '    '
+$CASE_SENSITIVE_COMPLETIONS = False
+$COMPLETIONS_CONFIRM = False
+$XONSH_AUTOPAIR = True
+$AUTO_CD = True
+$XONSH_SHOW_TRACEBACK = False
+$XONSH_TRACEBACK_LOGFILE = $HOME + '/.xonsh.traceback.log'
+$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+
+$PROMPT = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}\n {RED}{prompt_end}  '
+# $BOTTOM_TOOLBAR = '{#ffffff}{bg#000000}   {user}{BACKGROUND_GREEN}@{bg#000000}{hostname}'
+$RIGHT_PROMPT = '{env_name}{curr_branch}'
+
+
+import warnings
+warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warning
+
+xontrib load vox
+xontrib load vox_tabcomplete
+
+$GOPATH = $HOME + '/Projects/go'
+$GOROOT = '/usr/lib/golang'
+$PATH.append($GOPATH[0] + '/bin')
+
+
+import os
+
+if os.path.isdir($XONSH_TRACEBACK_LOGFILE):
+    print($XONSH_TRACEBACK_LOGFILE, 'is dir.')
+elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
+    touch $XONSH_TRACEBACK_LOGFILE
+    print('done: touch', $XONSH_TRACEBACK_LOGFILE)
+
+
+# aliases
+
+_sudo = '' if $USER == 'root' else 'sudo '
+
+aliases['l'] = 'ls'
+aliases['la'] = 'ls -a'
+aliases['ll'] = 'ls -lh'
+aliases['lla'] = 'ls -alh'
+
+aliases['d'] = _sudo + 'docker'
+aliases['dr'] = _sudo + 'docker run'
+aliases['ds'] = _sudo + 'docker start'
+aliases['dst'] = _sudo + 'docker stop'
+
+aliases['g'] = 'git'
+aliases['gs'] = 'git status'
+aliases['gc'] = 'git commit'
+aliases['ga'] = 'git add'
+aliases['gaa'] = 'git add -A'
+aliases['gr'] = 'git reset'
+aliases['gb'] = 'git branch'
+aliases['gch'] = 'git checkout'
+aliases['gm'] = 'git merge'
+
+aliases['_'] = 'sudo'
+aliases['c'] = 'clear'
+aliases['_d'] = _sudo + 'dnf'
+aliases['_di'] = _sudo + 'dnf -y install'
+
+aliases['python'] = 'python3'
+aliases['pip'] = 'pip3'
+
+aliases['pingoo'] = 'ping -c 3 google.com'
+aliases['untargz'] = 'tar zxvf'
+aliases['mktargz'] = 'tar zcvf'
+aliases['untarxz'] = 'tar Jxfv'
+aliases['unzips'] = 'unzip -O sjis'
+aliases['nano'] = 'nano -w'
+
+aliases['nx'] = 'nano ~/.dotfiles/.xonshrc'
+aliases['sx'] = 'source ~/.dotfiles/.xonshrc'
+
+
+def _trans(args, stdin=None):
+    from urllib.parse import quote
+    from time import sleep
+
+    options = [(index, value) for index, value in enumerate(args) if value[0] == '-']
+    options.reverse()
+    for i, v in options:
+        del args[i]
+
+    if '-j' in [v for _, v in options]:
+        url = 'https://translate.google.com/?hl=ja&tl=en&text='
+    else:
+        url = 'https://translate.google.com/?hl=ja&tl=ja&text='
+
+    if stdin is None:
+        if not args:
+            print('trans {arg[0]}')
+            print('_trans(args)')
+            return 1
+        for w in args:
+            text = quote(w)
+            google-chrome @(url+text)
+            sleep(1)
+    else:
+        while True:
+            text = quote(stdin.read(5000))
+            if text == '':
+                break
+            google-chrome @(url+text)
+            sleep(1)
+
+
+def watch_time(func):
+    import time
+    def wrap():
+        start_time = time.time()
+        ret = func()
+        end_time = time.time()
+        print(end_time - start_time)
+        return ret
+    return wrap
+
+
+aliases['trans'] = _trans
