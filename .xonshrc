@@ -11,9 +11,11 @@ $XONSH_SHOW_TRACEBACK = False
 $XONSH_TRACEBACK_LOGFILE = $HOME + '/.xonsh.traceback.log'
 $SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
 
+$PROMPT_FIELDS['env_prefix'] = '['
+$PROMPT_FIELDS['env_postfix'] = ']'
+
 $PROMPT = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}\n {RED}{prompt_end}  '
-# $BOTTOM_TOOLBAR = '{#ffffff}{bg#000000}   {user}{BACKGROUND_GREEN}@{bg#000000}{hostname}'
-$RIGHT_PROMPT = '{env_name}{curr_branch}'
+$RIGHT_PROMPT = '{curr_branch} {env_name}'
 
 
 import warnings
@@ -22,9 +24,21 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warn
 xontrib load vox
 xontrib load vox_tabcomplete
 
-$GOPATH = $HOME + '/Projects/go'
-$GOROOT = '/usr/lib/golang'
-$PATH.append($GOPATH[0] + '/bin')
+_ACTIVATE_PYTHON_NAME = '3.8'
+
+try:
+    $PYCHARM
+except KeyError:
+    vox activate @(_ACTIVATE_PYTHON_NAME)
+else:
+    try:
+        source-bash venv/bin/activate
+    except:
+        vox activate @(_ACTIVATE_PYTHON_NAME)
+
+
+$PATH.insert(0, $HOME+'/.npm-global/bin')
+$PATH.insert(0, './node_modules/.bin')
 
 
 import os
@@ -38,31 +52,35 @@ elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
 
 # aliases
 
-_sudo = '' if $USER == 'root' else 'sudo '
+_root = lambda a: ('' if $USER == 'root' else 'sudo ') + a
 
 aliases['l'] = 'ls'
 aliases['la'] = 'ls -a'
 aliases['ll'] = 'ls -lh'
 aliases['lla'] = 'ls -alh'
 
-aliases['d'] = _sudo + 'docker'
-aliases['dr'] = _sudo + 'docker run'
-aliases['ds'] = _sudo + 'docker start'
-aliases['dst'] = _sudo + 'docker stop'
-aliases['drm'] = _sudo + 'docker rm'
-aliases['dri'] = _sudo + 'docker rmi'
-aliases['dp'] = _sudo + 'dokcer ps -a'
+aliases['d'] = _root('docker')
+aliases['dl'] = _root('docker images')
+aliases['di'] = _root('docker images')
+aliases['db'] = _root('docker build')
+aliases['dr'] = _root('docker run')
+aliases['ds'] = _root('docker start')
+aliases['dst'] = _root('docker stop')
+aliases['de'] = _root('docker exec')
+aliases['drm'] = _root('docker rm')
+aliases['dri'] = _root('docker rmi')
+aliases['dp'] = _root('docker ps -a')
 
-aliases['dc'] = _sudo + 'docker-compose'
-aliases['dcu'] = _sudo + 'docker-compose up'
-
+aliases['dc'] = _root('docker-compose')
+aliases['dcu'] = _root('docker-compose up')
+aliases['dcb'] = _root('docker-compose build')
 
 aliases['g'] = 'git'
 aliases['gs'] = 'git status'
 aliases['gc'] = 'git commit'
 aliases['ga'] = 'git add'
 aliases['gaa'] = 'git add -A'
-aliases['grm'] = 'git reset'
+aliases['grs'] = 'git reset'
 aliases['gb'] = 'git branch'
 aliases['gch'] = 'git checkout'
 aliases['gm'] = 'git merge'
@@ -71,16 +89,16 @@ aliases['gps'] = 'git push'
 aliases['gcl'] = 'git clone'
 aliases['gr'] = 'git remote'
 aliases['gd'] = 'git diff'
-aliases['gl'] = 'git log --graph'
+aliases['gl'] = 'git log --oneline --decorate --graph --branches --tags --remotes'
+aliases['gst'] = 'git stash'
 
 aliases['_'] = 'sudo'
 aliases['c'] = 'clear'
-aliases['_d'] = _sudo + 'dnf'
-aliases['_di'] = _sudo + 'dnf -y install'
-aliases['du'] = _sudo + 'dnf update -y'
+aliases['dn'] = _root('dnf')
+aliases['dni'] = _root('dnf -y install')
+aliases['dnu'] = _root('dnf update -y')
+aliases['dns'] = _root('dnf search')
 
-aliases['python'] = 'python3'
-aliases['pip'] = 'pip3'
 aliases['pt'] = 'ptpython'
 
 aliases['pingoo'] = 'ping -c 3 google.com'
@@ -90,8 +108,22 @@ aliases['untarxz'] = 'tar Jxfv'
 aliases['unzips'] = 'unzip -O sjis'
 aliases['nano'] = 'nano -w'
 
+aliases['nasm64'] = 'nasm -f elf64'
+
 aliases['nx'] = 'nano ~/.dotfiles/.xonshrc'
+aliases['cx'] = 'code ~/.dotfiles'
 aliases['sx'] = 'source ~/.dotfiles/.xonshrc'
+
+
+def _run(args):
+    import sys
+    if(len(args) != 1):
+        sys.stderr.write('usage: run [file]\n')
+        exit(1)
+    a = ![@(args[0])]
+    print('')
+    print(f'========> {a.returncode}')
+    return a.returncode
 
 
 def _trans(args, stdin=None):
@@ -126,15 +158,5 @@ def _trans(args, stdin=None):
             sleep(1)
 
 
-def watch_time(func):
-    import time
-    def wrap():
-        start_time = time.time()
-        ret = func()
-        end_time = time.time()
-        print(end_time - start_time)
-        return ret
-    return wrap
-
-
 aliases['trans'] = _trans
+aliases['run'] = _run
