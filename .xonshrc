@@ -17,6 +17,8 @@ $PROMPT_FIELDS['env_postfix'] = ']'
 $PROMPT = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}\n {RED}{prompt_end}  '
 $RIGHT_PROMPT = '{curr_branch} {env_name}'
 
+# for screenfetch
+$shell_type = $(xonsh -V).strip()
 
 import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warning
@@ -24,17 +26,19 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warn
 xontrib load vox
 xontrib load vox_tabcomplete
 
-_ACTIVATE_PYTHON_NAME = '3.8'
+_ACTIVATE_PYTHON_NAME = '3.9'
 
 try:
     $PYCHARM
 except KeyError:
-    vox activate @(_ACTIVATE_PYTHON_NAME)
+    if _ACTIVATE_PYTHON_NAME:
+        vox activate @(_ACTIVATE_PYTHON_NAME)
 else:
     try:
         source-bash venv/bin/activate
     except:
-        vox activate @(_ACTIVATE_PYTHON_NAME)
+        if _ACTIVATE_PYTHON_NAME:
+            vox activate @(_ACTIVATE_PYTHON_NAME)
 
 
 $PATH.insert(0, $HOME+'/.npm-global/bin')
@@ -51,6 +55,8 @@ elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
 
 
 # aliases
+
+aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' else aliases['xpip'][0]
 
 _root = lambda a: ('' if $USER == 'root' else 'sudo ') + a
 
@@ -97,7 +103,8 @@ aliases['c'] = 'clear'
 aliases['dn'] = _root('dnf')
 aliases['dni'] = _root('dnf -y install')
 aliases['dnu'] = _root('dnf update -y')
-aliases['dns'] = _root('dnf search')
+aliases['dns'] = 'dnf search'
+aliases['dnr'] = _root('dnf remove')
 
 aliases['pt'] = 'ptpython'
 
@@ -106,7 +113,9 @@ aliases['untargz'] = 'tar zxvf'
 aliases['mktargz'] = 'tar zcvf'
 aliases['untarxz'] = 'tar Jxfv'
 aliases['unzips'] = 'unzip -O sjis'
-aliases['nano'] = 'nano -w'
+# aliases['nano'] = 'nano -w'
+# aliases['nano'] = 'vim'
+
 
 aliases['nasm64'] = 'nasm -f elf64'
 
