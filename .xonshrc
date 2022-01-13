@@ -1,5 +1,8 @@
 # xonsh env
 
+import os
+import warnings
+
 $VI_MODE = False
 $IGNOREEOF = True
 $INDENT = '    '
@@ -10,6 +13,7 @@ $AUTO_CD = True
 $XONSH_SHOW_TRACEBACK = False
 $XONSH_TRACEBACK_LOGFILE = $HOME + '/.xonsh.traceback.log'
 $SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True
 
 $PROMPT_FIELDS['env_prefix'] = '['
 $PROMPT_FIELDS['env_postfix'] = ']'
@@ -26,39 +30,21 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warn
 xontrib load vox
 xontrib load vox_tabcomplete
 
-_ACTIVATE_PYTHON_NAME = '3.9'
-
-try:
-    $PYCHARM
-except KeyError:
-    if _ACTIVATE_PYTHON_NAME:
-        vox activate @(_ACTIVATE_PYTHON_NAME)
-else:
-    try:
-        source-bash venv/bin/activate
-    except:
-        if _ACTIVATE_PYTHON_NAME:
-            vox activate @(_ACTIVATE_PYTHON_NAME)
-
-
-$PATH.insert(0, $HOME+'/.npm-global/bin')
-$PATH.insert(0, './node_modules/.bin')
-
-
-import os
 
 if os.path.isdir($XONSH_TRACEBACK_LOGFILE):
     print($XONSH_TRACEBACK_LOGFILE, 'is dir.')
 elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
     touch $XONSH_TRACEBACK_LOGFILE
-    print('done: touch', $XONSH_TRACEBACK_LOGFILE)
+    print('touched', $XONSH_TRACEBACK_LOGFILE)
 
 
 # aliases
 
 aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' else aliases['xpip'][0]
 
-_root = lambda a: ('' if $USER == 'root' else 'sudo ') + a
+
+def _root(a): return ('' if $USER == 'root' else 'sudo ') + a
+
 
 aliases['l'] = 'ls'
 aliases['la'] = 'ls -a'
