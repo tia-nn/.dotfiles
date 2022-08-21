@@ -3,155 +3,27 @@
 import os
 import warnings
 
-$VI_MODE = False
-$IGNOREEOF = True
-$INDENT = '    '
-$CASE_SENSITIVE_COMPLETIONS = False
-$COMPLETIONS_CONFIRM = False
-$XONSH_AUTOPAIR = True
-$AUTO_CD = True
-$XONSH_SHOW_TRACEBACK = False
-$XONSH_TRACEBACK_LOGFILE = $HOME + '/.xonsh.traceback.log'
-$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
-$FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True
-
-$PROMPT_FIELDS['env_prefix'] = '['
-$PROMPT_FIELDS['env_postfix'] = ']'
-
-$PROMPT = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}\n {RED}{prompt_end}  '
-$RIGHT_PROMPT = '{curr_branch} {env_name}'
+source ~/.dotfiles/xonsh/shell_environments.xsh
 
 # for screenfetch
-$shell_type = $(xonsh -V).strip()
+$shell_type = $(xonsh - V).strip()
 
-import warnings
-warnings.filterwarnings("ignore",category=DeprecationWarning)  # ignore vox warning
+warnings.filterwarnings(
+    "ignore", category=DeprecationWarning)  # ignore vox warning
 
 xontrib load vox
 xontrib load vox_tabcomplete
-
 
 if os.path.isdir($XONSH_TRACEBACK_LOGFILE):
     print($XONSH_TRACEBACK_LOGFILE, 'is dir.')
 elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
     touch $XONSH_TRACEBACK_LOGFILE
-    print('touched', $XONSH_TRACEBACK_LOGFILE)
+    print('make traceback log file, ', $XONSH_TRACEBACK_LOGFILE)
 
-
-# aliases
+if os.path.isfile(os.path.expanduser('~/.dotfiles/sh/aliases')):
+    source-bash ~/.dotfiles/sh/aliases
 
 aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' else aliases['xpip'][0]
-
-
-def _root(a): return ('' if $USER == 'root' else 'sudo ') + a
-
-
-aliases['l'] = 'ls'
-aliases['la'] = 'ls -a'
-aliases['ll'] = 'ls -lh'
-aliases['lla'] = 'ls -alh'
-
-aliases['d'] = _root('docker')
-aliases['dl'] = _root('docker images')
-aliases['di'] = _root('docker images')
-aliases['db'] = _root('docker build')
-aliases['dr'] = _root('docker run')
-aliases['ds'] = _root('docker start')
-aliases['dst'] = _root('docker stop')
-aliases['de'] = _root('docker exec')
-aliases['drm'] = _root('docker rm')
-aliases['dri'] = _root('docker rmi')
-aliases['dp'] = _root('docker ps -a')
-
-aliases['dc'] = _root('docker-compose')
-aliases['dcu'] = _root('docker-compose up')
-aliases['dcb'] = _root('docker-compose build')
-
-aliases['g'] = 'git'
-aliases['gs'] = 'git status'
-aliases['gc'] = 'git commit'
-aliases['ga'] = 'git add'
-aliases['gaa'] = 'git add -A'
-aliases['grs'] = 'git reset'
-aliases['gb'] = 'git branch'
-aliases['gch'] = 'git checkout'
-aliases['gm'] = 'git merge'
-aliases['gpl'] = 'git pull'
-aliases['gps'] = 'git push'
-aliases['gcl'] = 'git clone'
-aliases['gr'] = 'git remote'
-aliases['gd'] = 'git diff'
-aliases['gl'] = 'git log --oneline --decorate --graph --branches --tags --remotes'
-aliases['gst'] = 'git stash'
-
-aliases['_'] = 'sudo'
-aliases['c'] = 'clear'
-aliases['dn'] = _root('dnf')
-aliases['dni'] = _root('dnf -y install')
-aliases['dnu'] = _root('dnf update -y')
-aliases['dns'] = 'dnf search'
-aliases['dnr'] = _root('dnf remove')
-
-aliases['pt'] = 'ptpython'
-
-aliases['pingoo'] = 'ping -c 3 google.com'
-aliases['untargz'] = 'tar zxvf'
-aliases['mktargz'] = 'tar zcvf'
-aliases['untarxz'] = 'tar Jxfv'
-aliases['unzips'] = 'unzip -O sjis'
-# aliases['nano'] = 'nano -w'
-# aliases['nano'] = 'vim'
-
-
-aliases['nasm64'] = 'nasm -f elf64'
-
 aliases['nx'] = 'nano ~/.dotfiles/.xonshrc'
 aliases['cx'] = 'code ~/.dotfiles'
 aliases['sx'] = 'source ~/.dotfiles/.xonshrc'
-
-
-def _run(args):
-    import sys
-    if(len(args) != 1):
-        sys.stderr.write('usage: run [file]\n')
-        exit(1)
-    a = ![@(args[0])]
-    print('')
-    print(f'========> {a.returncode}')
-    return a.returncode
-
-
-def _trans(args, stdin=None):
-    from urllib.parse import quote
-    from time import sleep
-
-    options = [(index, value) for index, value in enumerate(args) if value[0] == '-']
-    options.reverse()
-    for i, v in options:
-        del args[i]
-
-    if '-j' in [v for _, v in options]:
-        url = 'https://translate.google.com/?hl=ja&tl=en&text='
-    else:
-        url = 'https://translate.google.com/?hl=ja&tl=ja&text='
-
-    if stdin is None:
-        if not args:
-            print('trans {arg[0]}')
-            print('_trans(args)')
-            return 1
-        for w in args:
-            text = quote(w)
-            google-chrome @(url+text)
-            sleep(1)
-    else:
-        while True:
-            text = quote(stdin.read(5000))
-            if text == '':
-                break
-            google-chrome @(url+text)
-            sleep(1)
-
-
-aliases['trans'] = _trans
-aliases['run'] = _run

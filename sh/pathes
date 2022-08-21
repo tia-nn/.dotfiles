@@ -1,0 +1,37 @@
+# PATH Set
+
+if [ -e "$HOME/.local/bin" ]; then
+	export PATH="$(find ~/.local/bin -follow -type d | tr '\n' ':')$PATH"
+	export PATH="$HOME/.local/bin:$PATH"
+fi
+
+if [ -e "$HOME/.pyenv" ]; then
+	export PYENV_ROOT="$HOME/.pyenv"
+	export PATH="$PYENV_ROOT/bin:$PATH"
+	export PATH="$PYENV_ROOT/shims:$PATH"
+	eval "$(pyenv init -)"
+fi
+
+if [ -e "$HOME/.haxe-versions/default" ]; then
+	export HAXE_PATH="$HOME/.haxe-versions/default"
+	export PATH="$HAXE_PATH:$PATH"
+fi
+
+if [ -e "$HOME/.haxe-versions/hashlink" ]; then
+	export PATH="$HOME/.haxe-versions/hashlink:$PATH"
+fi
+
+if [ -e "$HOME/.npm" ]; then
+	export NPM_BIN="$HOME/.npm/bin"
+	export PATH="$NPM_BIN:$PATH"
+fi
+
+if [ -e "$HOME/.local/apps/intelFPGA/21.1/quartus" ]; then
+	export PATH="$HOME/.local/apps/intelFPGA/21.1/quartus/bin:$PATH"
+	export QSYS_ROOTDIR="$HOME/.local/apps/intelFPGA/21.1/quartus/sopc_builder/bin"
+fi
+
+if [ -e "$HOME/.local/apps/intelFPGA/21.1/questa_fse" ]; then
+	export PATH="$HOME/.local/apps/intelFPGA/21.1/questa_fse/bin:$PATH"
+	export LM_LICENSE_FILE="$HOME/.local/apps/intelFPGA/questa_License.dat:$HOME/.local/apps/intelFPGA/quartus_License.dat"
+fi
