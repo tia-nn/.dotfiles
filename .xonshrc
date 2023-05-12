@@ -3,16 +3,12 @@
 import os
 import warnings
 
-source ~/.dotfiles/xonsh/shell_environments.xsh
+source ~/.dotfiles/xonsh/*.xsh
 
 # for screenfetch
 $shell_type = $(xonsh - V).strip()
 
-warnings.filterwarnings(
-    "ignore", category=DeprecationWarning)  # ignore vox warning
-
-xontrib load vox
-xontrib load vox_tabcomplete
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 if os.path.isdir($XONSH_TRACEBACK_LOGFILE):
     print($XONSH_TRACEBACK_LOGFILE, 'is dir.')
@@ -20,10 +16,8 @@ elif not os.path.isfile($XONSH_TRACEBACK_LOGFILE):
     touch $XONSH_TRACEBACK_LOGFILE
     print('make traceback log file, ', $XONSH_TRACEBACK_LOGFILE)
 
-if os.path.isfile(os.path.expanduser('~/.dotfiles/sh/aliases')):
-    source-bash ~/.dotfiles/sh/aliases
+aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' \
+                        else aliases['xpip'][0]
 
-aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' else aliases['xpip'][0]
-aliases['nx'] = 'nano ~/.dotfiles/.xonshrc'
-aliases['cx'] = 'code ~/.dotfiles'
-aliases['sx'] = 'source ~/.dotfiles/.xonshrc'
+# XONSH WEBCONFIG START
+# XONSH WEBCONFIG END

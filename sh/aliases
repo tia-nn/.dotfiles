@@ -11,25 +11,32 @@ alias unzips='unzip -O sjis'
 alias nano='nano -w'
 alias pingo='ping -c 3 google.com'
 
-alias d='dnf'
-alias di='sudo dnf -y install'
-alias du='sudo dnf -y update'
-alias ds='dnf search'
-alias drm='dnf remove'
+# alias d='dnf'
+# alias di='sudo dnf -y install'
+# alias du='sudo dnf -y update'
+# alias ds='dnf search'
+# alias drm='dnf remove'
 
-alias pod='podman'
-alias pimg='podman images'
-alias pbld='podman build'
-alias prun='podman run'
-alias pexe='podman exec'
-alias prm='podman rm'
-alias prmc='podman rm'
-alias prmi='podman rmi'
-alias pps='podman ps -a'
-alias pst='podman start'
-alias pstp='podman stop'
-alias prest='podman restart'
-alias ppl='podman pull'
+# docker='podman'
+docker='docker'
+
+alias dc="$docker"
+alias dimg="$docker images"
+alias dbld="$docker build"
+alias drun="$docker run"
+alias dexe="$docker exec"
+alias drm="$docker rm"
+alias drmc="$docker rm"
+alias drmi="$docker rmi"
+alias dps="$docker ps -a"
+alias dst="$docker start"
+alias dstp="$docker stop"
+alias drest="$docker restart"
+alias dpl="$docker pull"
+
+alias dcc="$docker-compose"
+alias dcu="$docker-compose up"
+alias dcd="$docker-compose down"
 
 alias g='git'
 
