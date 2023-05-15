@@ -1,8 +1,3 @@
-# activate abbrevs
-if not ![xontrib load abbrevs]:
-    xpip install xontrib-abbrevs
-    xontrib load abbrevs
-
 # tools
 abbrevs['cp'] = 'cp -r'
 abbrevs['c'] = 'clear'

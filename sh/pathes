@@ -11,7 +11,7 @@ if [ -e "$HOME/.pyenv" ]; then
 		export PATH="$PYENV_ROOT/bin:$PATH"
 	fi
 	export PATH="$PYENV_ROOT/shims:$PATH"
-	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
 fi
 
 if [ -e "$HOME/.haxe-versions/default" ]; then
