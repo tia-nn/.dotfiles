@@ -1,3 +1,4 @@
+#!/bin/sh
 
 if [[ ! -x ~/.dotfiles/instant/xonsh ]]; then
     # TODO: for M1/M2 Mac
