@@ -10,6 +10,10 @@ else:
     echo 'already exist ~/.xonshrc'
 
 
+if not os.path.lexists(p'~/.xonsh.traceback.log'):
+    touch ~/.dotfiles/xonsh.traceback.log
+    ln -s ~/.dotfiles/xonsh.traceback.log ~/.xonsh.traceback.log
+
 if 'LOGIN_SHELL_PROFILE' in ${...} and $LOGIN_SHELL_PROFILE != '':
     shell = p'$LOGIN_SHELL_PROFILE'
 elif (uname_res := $(uname).rstrip()) == 'Linux':
@@ -17,7 +21,7 @@ elif (uname_res := $(uname).rstrip()) == 'Linux':
 elif uname_res == 'Darwin':
     shell = p'~/.zprofile'
 else:
-    echo 'please set $LOGIN_SHELL_PROFILE ex. "~/.bash_profile"'
+    echo 'please set $LOGIN_SHELL_PROFILE; ex. "~/.bash_profile"'
     exit
 
 p = r'''

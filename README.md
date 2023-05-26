@@ -41,3 +41,12 @@ see also https://xon.sh/
 ``` bash
 python -m pip install 'xonsh[full]'
 ```
+
+### hyper
+
+TODO
+https://hyper.is/
+
+### .xonshrc env
+
+$DOCKER_COMMAND: Specify a Docker like command.

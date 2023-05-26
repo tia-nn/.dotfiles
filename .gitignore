@@ -1,5 +1,8 @@
-/reconnect-drvctl.sh
+.DS_Store
 
 /instant/xonsh
 /font
-.DS_Store
+
+xonsh.traceback.log
+/reconnect-drvctl.sh
+
