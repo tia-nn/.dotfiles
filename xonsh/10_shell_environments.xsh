@@ -1,7 +1,7 @@
 # see https://xon.sh/envvars.html for details
 
 $FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = True
-$XONSH_TRACEBACK_LOGFILE = $HOME + '/.xonsh.traceback.log'
+$XONSH_TRACEBACK_LOGFILE = p'~/.xonsh.traceback.log'
 
 #$AUTO_SUGGEST = True
 #$AUTO_SUGGEST_IN_COMPLETION = False
@@ -23,3 +23,11 @@ $COMPLETIONS_CONFIRM = False
 # $UPDATE_COMPLETIONS_ON_KEYPRESS = False
 
 $BASH_COMPLETIONS = '~/.dotfiles/xonsh/bash_completions.bash'
+
+
+# for screenfetch
+$shell_type = $(xonsh -V).strip()
+
+
+
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
