@@ -2,7 +2,6 @@ def _xonshrc_abbrevs():
     from typing import Optional, List, Callable, Union
     from prompt_toolkit.buffer import Buffer
     import warnings
-    import xontrib.abbrevs
     from lib.xonshrc_warnings import AbbrevsConfigSkipWarning
 
 
@@ -78,7 +77,7 @@ def _xonshrc_abbrevs():
         abbrevs['dlsi'] = head_only(f'{docker} image ls')
         abbrevs['dbld'] = head_only(f'{docker} build ./')
         abbrevs['drun'] = head_only(f'{docker} run')
-        abbrevs['itr'] = startswith(docker, '-it --rm')
+        abbrevs['-itr'] = startswith(docker, '-it --rm')
         abbrevs['dexe'] = head_only(f'{docker} exec -it')
         abbrevs['drm'] = head_only(f'{docker} rm')
         abbrevs['drmi'] = head_only(f'{docker} rmi')
@@ -97,6 +96,9 @@ def _xonshrc_abbrevs():
         abbrevs['dcs'] = head_only(f'{docker}-compose stop')
         abbrevs['dcr'] = head_only(f'{docker}-compose rm')
         abbrevs['dccc'] = head_only(f'{docker}-compose config')
+
+
+    docker_abbrevs()
 
 
     abbrevs['g'] = head_only('git')
@@ -145,7 +147,7 @@ def _xonshrc_abbrevs():
     abbrevs['gwt'] = head_only('git worktree')
     abbrevs['gcf'] = head_only('git config')
     abbrevs['ggc'] = head_only('git gc')
-    abbrevs['headbr'] = startswith('git', lambda word, buffer: r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else word)
+    abbrevs['_hb'] = startswith('git', lambda word, buffer: r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else word)
 
 
     def git_prune_merged_branch():
