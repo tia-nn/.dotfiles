@@ -148,7 +148,7 @@ def _xonshrc_abbrevs():
     abbrevs['gwt'] = head_only('git worktree')
     abbrevs['gcf'] = head_only('git config')
     abbrevs['ggc'] = head_only('git gc')
-    abbrevs['headbr'] = startswith('git', lambda word, buffer: r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else word)
+    abbrevs['_hb'] = startswith('git', lambda word, buffer: r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else word)
 
 
     def git_prune_merged_branch():
