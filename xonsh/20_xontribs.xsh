@@ -14,7 +14,7 @@ def _xonshrc_xontribs():
             @(if_success)
 
 
-    xontrib load vox
+    load_with_install('xontrib-vox', 'vox')
     load_with_install('xonsh-vox-tabcomplete', 'vox_tabcomplete')
     load_with_install('xontrib-abbrevs', 'abbrevs')
     load_with_install('xontrib-langenv', 'pyenv', ['pyenv', 'shell', '--unset'])
