@@ -26,7 +26,7 @@ else:
 
 p = r'''
 if [ -d ${HOME}/.dotfiles ]; then
-    source ${HOME}/.dotfiles/sh/pathes
+    source ${HOME}/.dotfiles/sh/paths
 fi
 '''
 

@@ -28,6 +28,11 @@ if [ -e "$HOME/.npm" ]; then
 	export PATH="$NPM_BIN:$PATH"
 fi
 
+if [ -e "$HOME/.local/apps/n" ]; then
+	export N_PREFIX="$HOME/.local/apps/n"
+	export PATH="$N_PREFIX/bin:$PATH"
+fi
+
 if [ -e "$HOME/.local/apps/intelFPGA_lite/22.1std/quartus" ]; then
 	export PATH="$HOME/.local/apps/intelFPGA_lite/22.1std/quartus/bin:$PATH"
 	export QSYS_ROOTDIR="$HOME/.local/apps/intelFPGA_lite/22.1std/quartus/sopc_builder/bin"
