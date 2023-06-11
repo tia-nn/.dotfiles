@@ -19,12 +19,26 @@ def _xonshrc_tools():
                 print(file=sys.stderr, f'ignore file: {file_name}; {e}')
                 continue
             envs.append(f.read())
+            f.close()
 
         source-bash f'''
             set -a
             {os.sep.join(envs)}
             set +a
         '''
+
+
+    # def env_with_dotenv(args: List[str], stdin=None, stdout=None, stderr=None):
+    #     try:
+    #         f = open('.dotenv')
+    #     except Exception as e:
+    #         print(file=sys.stderr, f"can't open .env file; {e}")
+    #         env = []
+    #     else:
+    #         env = f.read().split()
+    #         f.close()
+
+    #     env @(env) @(args)
 
 
     class EnvStack():
@@ -73,6 +87,8 @@ def _xonshrc_tools():
     aliases['pope'] = __envstack__.pope
 
     aliases['loadenv'] = load_envfile
+    # aliases['envd'] = env_with_dotenv
+    abbrevs['envd'] = "env @(open('.env').read().split())"
     aliases['push-and-loadenv'] = push_and_loadenv
 
 
