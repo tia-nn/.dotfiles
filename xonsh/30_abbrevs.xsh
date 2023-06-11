@@ -99,6 +99,9 @@ def _xonshrc_abbrevs():
         abbrevs['dccc'] = head_only(f'{docker}-compose config')
 
 
+    docker_abbrevs()
+
+
     abbrevs['g'] = head_only('git')
     abbrevs['gcl'] = head_only('git clone')
     abbrevs['gini'] = head_only('git init')
