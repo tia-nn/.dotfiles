@@ -3,20 +3,28 @@ def _xonshrc_tools():
     from pprint import pprint
     from collections import deque
     from copy import copy
+    import sys
+    import os
 
-    class EnvLoader:
-        old_env: Dict[str, Dict[str, Optional[str]]]
 
-        def load_dotenv(args: List):
-            pass
+    def load_envfile(args: List[str]):
+        if args == []:
+            args = ['.env']
 
-    def load_dotenv(args: List[str]):
-        var_strs = [ll for ll in [l.strip() for l in $(cat @(args)).splitlines()] if ll and ll[0] != '#']
+        envs = []
+        for file_name in args:
+            try:
+                f = open(file_name)
+            except Exception as e:
+                print(file=sys.stderr, f'ignore file: {file_name}; {e}')
+                continue
+            envs.append(f.read())
 
-        # _
-
-        pprint(var_strs)
-
+        source-bash f'''
+            set -a
+            {os.sep.join(envs)}
+            set +a
+        '''
 
 
     class EnvStack():
@@ -50,6 +58,11 @@ def _xonshrc_tools():
             self.stack.append(copy(${...}.detype()))
 
 
+    def push_and_loadenv(args):
+        __envstack__.pushe()
+        load_envfile(args)
+
+
     global __envstack__
     try:
         __envstack__ = __envstack__ if __envstack__ is not None else EnvStack()
@@ -59,7 +72,8 @@ def _xonshrc_tools():
     aliases['pushe'] = __envstack__.pushe
     aliases['pope'] = __envstack__.pope
 
-    aliases['loadenv'] = load_dotenv
+    aliases['loadenv'] = load_envfile
+    aliases['push-and-loadenv'] = push_and_loadenv
 
 
 _xonshrc_tools()
