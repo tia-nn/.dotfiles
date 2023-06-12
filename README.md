@@ -28,6 +28,13 @@ see also https://github.com/pyenv/pyenv/wiki#suggested-build-environment
 dnf install make gcc patch zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel tk-devel libffi-devel xz-devel libuuid-devel gdbm-devel libnsl2-devel
 ```
 
+#### ubuntu 22.04
+
+``` bash
+sudo apt update
+sudo apt install make gcc build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev curl libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+```
+
 #### build latest python
 
 ``` bash

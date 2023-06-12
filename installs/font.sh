@@ -1,3 +1,5 @@
+#!/bin/sh
+
 mkdir -p ~/.dotfiles/font/tool
 
 # 源ノ角ゴシック Code https://github.com/adobe-fonts/source-han-code-jp/releases/tag/2.012R
