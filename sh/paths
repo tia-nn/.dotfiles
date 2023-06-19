@@ -10,7 +10,6 @@ if [ -e "$HOME/.pyenv" ]; then
 	if [ "$(uname)" != "Darwin" ]; then
 		export PATH="$PYENV_ROOT/bin:$PATH"
 	fi
-	export PATH="$PYENV_ROOT/shims:$PATH"
 	eval "$(pyenv virtualenv-init -)"
 fi
 
