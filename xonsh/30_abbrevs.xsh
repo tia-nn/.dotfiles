@@ -154,7 +154,7 @@ def _xonshrc_abbrevs():
     def git_prune_merged_branch():
         git switch @(get_git_defaultbranch())
         git pull origin @(get_git_defaultbranch())
-        git branch --merged | egrep --invert-match r'\\*|main|develop|release' | xargs git branch -d
+        git branch --merged | egrep --invert-match r'\*|main|develop|release' | xargs git branch -d
         git switch -
 
 
