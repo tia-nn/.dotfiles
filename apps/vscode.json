@@ -1,0 +1,51 @@
+{
+    "editor.fontFamily": "\"源ノ角ゴシック Code JP\", Menlo, Monaco, 'Courier New', monospace",
+    "jetbrainsKeymap.promptV3Features": false,
+    "git.openRepositoryInParentFolders": "never",
+    "terminal.external.osxExec": "Hyper.app",
+    "terminal.integrated.profiles.osx": {
+        "bash": {
+            "path": "bash",
+            "args": [
+                "-l"
+            ],
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh",
+            "args": [
+                "-l"
+            ]
+        },
+        "fish": {
+            "path": "fish",
+            "args": [
+                "-l"
+            ]
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        },
+        "xonsh": {
+            "path": "bash",
+            "args": [
+                "-l",
+                "-c",
+                "xonsh"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "xonsh",
+    "editor.formatOnSave": true,
+    "explorer.confirmDragAndDrop": false,
+    "editor.accessibilitySupport": "on",
+    "liveshare.accessibility.voice": "ja-JP-Nanami",
+    "audioCues.lineHasError": "off",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}
