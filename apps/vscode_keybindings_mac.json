@@ -1,0 +1,42 @@
+[
+    {
+        "key": "ctrl+enter",
+        "command": "editor.action.insertLineAfter",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "cmd+enter",
+        "command": "-editor.action.insertLineAfter",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+shift+enter",
+        "command": "editor.action.insertLineBefore",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "shift+cmd+enter",
+        "command": "-editor.action.insertLineBefore",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "cmd+t",
+        "command": "-workbench.action.showAllSymbols"
+    },
+    {
+        "key": "cmd+t",
+        "command": "workbench.action.files.newUntitledFile"
+    },
+    {
+        "key": "cmd+n",
+        "command": "-workbench.action.files.newUntitledFile"
+    },
+    {
+        "key": "cmd+n",
+        "command": "workbench.action.newWindow"
+    },
+    {
+        "key": "shift+cmd+n",
+        "command": "-workbench.action.newWindow"
+    }
+]

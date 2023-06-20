@@ -8,9 +8,11 @@ fi
 if [ -e "$HOME/.pyenv" ]; then
 	export PYENV_ROOT="$HOME/.pyenv"
 	if [ "$(uname)" != "Darwin" ]; then
+		# in Mac, bin dir is /opt/homebrew/bin (if using brew)
 		export PATH="$PYENV_ROOT/bin:$PATH"
 	fi
-	eval "$(pyenv virtualenv-init -)"
+	eval "$(pyenv init -)"
+	# eval "$(pyenv virtualenv-init -)"
 fi
 
 if [ -e "$HOME/.haxe-versions/default" ]; then
