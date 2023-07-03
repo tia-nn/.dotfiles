@@ -9,6 +9,10 @@ if not os.path.lexists(p'~/.xonshrc'):
 else:
     echo 'already exist ~/.xonshrc'
 
+if not os.path.lexists(p'~/.hyper.js'):
+    ln -s ~/.dotfiles/apps/.hyper.js ~/.hyper.js
+else:
+    echo 'already exist ~/.hyper.js'
 
 if not os.path.lexists(p'~/.xonsh.traceback.log'):
     touch ~/.dotfiles/xonsh.traceback.log
