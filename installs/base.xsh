@@ -31,3 +31,5 @@ fi
 '''
 
 echo -n @(p) >> @(shell)
+
+mkdir -p ~/.loacl/bin
