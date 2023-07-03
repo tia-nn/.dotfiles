@@ -5,7 +5,7 @@ my dotfiles for Xonsh and others
 ## install
 
 ```
-$ ~/.dotfiles/installs/dotfiles.sh
+$ ~/.dotfiles/installs/base.sh
 ```
 
 ## tools install

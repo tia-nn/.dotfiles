@@ -45,7 +45,12 @@
     "explorer.confirmDragAndDrop": false,
     "editor.accessibilitySupport": "on",
     "liveshare.accessibility.voice": "ja-JP-Nanami",
-    "audioCues.lineHasError": "off",
     "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "cSpell.userWords": [
+        "Upsert",
+        "xonsh"
+    ],
+    "audioCues.volume": 0,
+    "go.toolsManagement.autoUpdate": true
 }

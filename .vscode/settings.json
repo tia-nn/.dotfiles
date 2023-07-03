@@ -3,5 +3,13 @@
         "editor.defaultFormatter": "ms-python.autopep8"
     },
     "python.formatting.provider": "none",
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "cSpell.words": [
+        "jetbrains",
+        "Keymap",
+        "liveshare",
+        "Menlo",
+        "Nanami",
+        "pwsh"
+    ]
 }
