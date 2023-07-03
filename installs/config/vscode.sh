@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # see also https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations
 
 if [ "$(uname)" == 'Darwin' ]; then
     vscode_profile_dir="$HOME/Library/Application Support/Code/User"
     vscode_keybindings_file="vscode_keybindings_mac.json"
 elif [ "$(expr substr $(uname -s) 1 5)" == 'Linux' ]; then
-    vscode_profile="$HOME/.config/Code/User"
+    vscode_profile_dir="$HOME/.config/Code/User"
     vscode_keybindings_file="vscode_keybindings_linux.json"
 else
     echo "not supported your platform..." >&2
