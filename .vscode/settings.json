@@ -1,15 +1,22 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8"
+        "editor.defaultFormatter": "ms-python.autopep8",
+    },
+    "[xonsh]": {
+        "editor.formatOnSave": false,
     },
     "python.formatting.provider": "none",
-    "editor.formatOnSave": false,
     "cSpell.words": [
+        "dotfiles",
         "jetbrains",
         "Keymap",
         "liveshare",
         "Menlo",
         "Nanami",
-        "pwsh"
+        "pwsh",
+        "xonshrc"
+    ],
+    "python.analysis.extraPaths": [
+        "./xonsh/lib"
     ]
 }

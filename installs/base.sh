@@ -1,3 +1,3 @@
 #!/bin/sh
 
-$HOME/.dotfiles/instant/xonsh.sh $HOME/.dotfiles/installs/base.xsh
+python $HOME/.dotfiles/installs/base.py

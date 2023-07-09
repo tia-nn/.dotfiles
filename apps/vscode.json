@@ -77,10 +77,14 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "cSpell.userWords": [
+        "Capslock",
+        "Keymap",
+        "keymaps",
         "Upsert",
         "xonsh"
     ],
     "audioCues.volume": 0,
     "go.toolsManagement.autoUpdate": true,
-    "window.zoomLevel": 1
+    "python.venvPath": "~/.virtualenvs",
+    "window.zoomLevel": 2
 }
