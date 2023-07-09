@@ -4,3 +4,7 @@ class AutoInitializedWarning(Warning):
 
 class AbbrevsConfigSkipWarning(Warning):
     pass
+
+
+class AbbrevsXontribNotInstalled(Warning):
+    pass

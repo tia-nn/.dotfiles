@@ -2,11 +2,18 @@ def _xonshrc_abbrevs():
     from typing import Optional, List, Callable, Union
     from prompt_toolkit.buffer import Buffer
     import warnings
-    from lib.xonshrc_warnings import AbbrevsConfigSkipWarning
+    from lib.xonshrc_warnings import AbbrevsConfigSkipWarning, AbbrevsXontribNotInstalled
+    import os
+    import subprocess
 
+    from xonsh.built_ins import XSH
 
-    global abbrevs
-
+    try:
+        from xontrib.abbrevs import abbrevs
+    except ModuleNotFoundError:
+        warnings.warn("xontrib-abbrevs not installed.",
+                      AbbrevsXontribNotInstalled)
+        return
 
     def head_only(abbr: Union[str, Callable]):
         def abbr_func(word: str, buffer: Buffer) -> str:
@@ -20,7 +27,6 @@ def _xonshrc_abbrevs():
                 return word
         return abbr_func
 
-
     def startswith(command: str, abbr: Union[str, Callable]):
         def abbr_func(word: str, buffer: Buffer) -> str:
             if buffer.text.startswith(command):
@@ -33,15 +39,19 @@ def _xonshrc_abbrevs():
                 return word
         return abbr_func
 
-
     def get_git_defaultbranch():
-        if 'GIT_DEFAULTBRANCH' in ${...} and $GIT_DEFAULTBRANCH:
-            return $GIT_DEFAULTBRANCH
-        if (git_conf := !(git config init.defaultBranch)):
-            return git_conf.out.strip()
+        if (b := os.getenv('GIT_DEFAULTBRANCH')):
+            return b
+        if (git_conf := subprocess.run(('git', 'config', 'init.defaultBranch'), capture_output=True)).returncode == 0:
+            return git_conf.stdout.decode().rstrip()
         else:
             return '<edit>'
 
+    def get_current_branch():
+        if (r := subprocess.run(('git', 'rev-pars', '--abbrev-ref', 'HEAD'), capture_output=True)).returncode == 0:
+            return r.stdout.decode().rstrip()
+        else:
+            return '<edit>'
 
     # tools
     abbrevs['cp'] = head_only('cp -r')
@@ -55,21 +65,17 @@ def _xonshrc_abbrevs():
     abbrevs['sx'] = head_only('source ~/.xonshrc')
     abbrevs['cx'] = head_only('code ~/.dotfiles')
 
-    aliases['dfu-hhkb'] = 'dfu-programmer atmega32u4'
-    aliases['xpython'] = aliases['xpip'][1] if aliases['xpip'][0] == 'sudo' \
-                            else aliases['xpip'][0]
-
-
     # docker / podman
     def docker_abbrevs():
-        if 'DOCKER_COMMAND' in ${...} and $DOCKER_COMMAND:
-            docker = $DOCKER_COMMAND
-        elif !(which docker):
+        if (docker := os.getenv('DOCKER_COMMAND')):
+            pass
+        elif subprocess.run(('which', 'docker'), capture_output=True).returncode == 0:
             docker = 'docker'
-        elif !(which podman):
+        elif subprocess.run(('which', 'podman'), capture_output=True).returncode == 0:
             docker = 'podman'
         else:
-            warnings.warn("Docker like command is not installed. Please install or set $DOCKER_COMMAND.", AbbrevsConfigSkipWarning)
+            warnings.warn(
+                "Docker like command is not installed. Please install or set $DOCKER_COMMAND.", AbbrevsConfigSkipWarning)
             return
 
         abbrevs['dc'] = head_only(f'{docker}')
@@ -100,9 +106,7 @@ def _xonshrc_abbrevs():
         abbrevs['dcr'] = head_only(f'{docker}-compose rm')
         abbrevs['dccc'] = head_only(f'{docker}-compose config')
 
-
     docker_abbrevs()
-
 
     abbrevs['g'] = head_only('git')
     abbrevs['gcl'] = head_only('git clone')
@@ -112,7 +116,8 @@ def _xonshrc_abbrevs():
     abbrevs['gaa'] = head_only('git add --all')
     abbrevs['gmv'] = head_only('git mv')
     abbrevs['grstr'] = head_only('git restore')
-    abbrevs['grstrm'] = head_only(lambda word, buffer: f'git restore --source={get_git_defaultbranch()}')
+    abbrevs['grstrm'] = head_only(
+        lambda word, buffer: f'git restore --source={get_git_defaultbranch()}')
     abbrevs['grstrh'] = head_only('git restore --source HEAD')
     abbrevs['grm'] = head_only('git rm')
     abbrevs['grmc'] = head_only('git rm --cached')
@@ -124,7 +129,8 @@ def _xonshrc_abbrevs():
     abbrevs['gl'] = head_only('git log')
     abbrevs['glg'] = head_only('git log --graph --oneline --all')
     abbrevs['gln'] = head_only('git log --graph --oneline --all --max-count')
-    abbrevs['glmn'] = head_only(lambda word, buffer: f'git log --graph --oneline --branches={get_git_defaultbranch()} --max-count')
+    abbrevs['glmn'] = head_only(
+        lambda word, buffer: f'git log --graph --oneline --branches={get_git_defaultbranch()} --max-count')
     abbrevs['gsh'] = head_only('git show')
     abbrevs['gs'] = head_only('git status')
 
@@ -140,10 +146,12 @@ def _xonshrc_abbrevs():
     abbrevs['gf'] = head_only('git fetch')
     abbrevs['gpl'] = head_only('git pull')
     abbrevs['gplo'] = head_only('git pull origin')
-    abbrevs['gploh'] = head_only(lambda word, buffer: f'git pull origin {r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else "<edit>"}')
+    abbrevs['gploh'] = head_only(
+        lambda word, buffer: f'git pull origin {get_current_branch()}')
     abbrevs['gps'] = head_only('git push')
     abbrevs['gpso'] = head_only('git push origin')
-    abbrevs['gpsoh'] = head_only(lambda word, buffer: f'git push origin {r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else "<edit>"}')
+    abbrevs['gpsoh'] = head_only(
+        lambda word, buffer: f'git push origin {get_current_branch()}')
 
     abbrevs['gst'] = head_only('git stash')
     abbrevs['gsm'] = head_only('git submodule')
@@ -153,17 +161,8 @@ def _xonshrc_abbrevs():
     abbrevs['gcf'] = head_only('git config')
     abbrevs['ggc'] = head_only('git gc')
 
-    abbrevs['@b'] = startswith('git', lambda word, buffer: r.out.strip() if (r := !(git rev-parse --abbrev-ref HEAD)) else word)
-
-
-    def git_prune_merged_branch():
-        git switch @(get_git_defaultbranch())
-        git pull origin @(get_git_defaultbranch())
-        git branch --merged | egrep --invert-match r'\\*|main|master|develop|release' | xargs git branch -d
-        git switch -
-
-
-    aliases['git-prune-localbranch'] = git_prune_merged_branch
+    abbrevs['@b'] = startswith('git', lambda word,
+                               buffer: get_current_branch())
 
 
 _xonshrc_abbrevs()

@@ -14,9 +14,10 @@
         "Menlo",
         "Nanami",
         "pwsh",
-        "xonshrc"
+        "xonshrc",
+        "Xontrib"
     ],
     "python.analysis.extraPaths": [
-        "./xonsh/lib"
+        "./xonsh"
     ]
 }

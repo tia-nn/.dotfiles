@@ -10,10 +10,10 @@ platform = system()
 home = Path.home()
 dotfiles = home / '.dotfiles'
 
-sys.path.insert(0, str(dotfiles / 'xonsh' / 'lib'))
+sys.path.insert(0, str(dotfiles / 'xonsh'))
 os.makedirs(home / '.local' / 'bin', exist_ok=True)
 
-from platform_exception import PlatformNotSupported  # nopep8
+from lib.platform_exception import PlatformNotSupported  # nopep8
 
 
 def error(*values: object,
