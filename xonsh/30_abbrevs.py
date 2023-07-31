@@ -7,6 +7,7 @@ def _xonshrc_abbrevs():
     import subprocess
 
     from xonsh.built_ins import XSH
+    from lib.git import get_git_defaultbranch, get_current_branch
 
     try:
         from xontrib.abbrevs import abbrevs
@@ -39,20 +40,6 @@ def _xonshrc_abbrevs():
                 return word
         return abbr_func
 
-    def get_git_defaultbranch():
-        if (b := os.getenv('GIT_DEFAULTBRANCH')):
-            return b
-        if (git_conf := subprocess.run(('git', 'config', 'init.defaultBranch'), capture_output=True)).returncode == 0:
-            return git_conf.stdout.decode().rstrip()
-        else:
-            return '<edit>'
-
-    def get_current_branch():
-        if (r := subprocess.run(('git', 'rev-pars', '--abbrev-ref', 'HEAD'), capture_output=True)).returncode == 0:
-            return r.stdout.decode().rstrip()
-        else:
-            return '<edit>'
-
     # tools
     abbrevs['cp'] = head_only('cp -r')
     abbrevs['c'] = head_only('clear')
@@ -64,6 +51,8 @@ def _xonshrc_abbrevs():
 
     abbrevs['sx'] = head_only('source ~/.xonshrc')
     abbrevs['cx'] = head_only('code ~/.dotfiles')
+
+    abbrevs['devnull'] = '/dev/null'
 
     # docker / podman
     def docker_abbrevs():
@@ -127,10 +116,12 @@ def _xonshrc_abbrevs():
     abbrevs['gd'] = head_only('git diff')
     abbrevs['gg'] = head_only('git grep')
     abbrevs['gl'] = head_only('git log')
-    abbrevs['glg'] = head_only('git log --graph --oneline --all')
+    abbrevs['gla'] = head_only('git log --graph --oneline --all')
+    abbrevs['glh'] = head_only(
+        lambda word, buffer: f'git log --graph --oneline --first-parent --branches')
     abbrevs['gln'] = head_only('git log --graph --oneline --all --max-count')
     abbrevs['glmn'] = head_only(
-        lambda word, buffer: f'git log --graph --oneline --branches={get_git_defaultbranch()} --max-count')
+        lambda word, buffer: f'git log --graph --oneline --first-parent --branches {get_git_defaultbranch()} --max-count')
     abbrevs['gsh'] = head_only('git show')
     abbrevs['gs'] = head_only('git status')
 

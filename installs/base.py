@@ -11,7 +11,6 @@ home = Path.home()
 dotfiles = home / '.dotfiles'
 
 sys.path.insert(0, str(dotfiles / 'xonsh'))
-os.makedirs(home / '.local' / 'bin', exist_ok=True)
 
 from lib.platform_exception import PlatformNotSupported  # nopep8
 
@@ -37,6 +36,8 @@ else:
     ans = input(
         '# Already exist ~/.xonshrc . Do you want to override? [Y/n]').lower()
     if ans == 'y' or ans == 'yes':
+        print('mkdir -p ~/.dotfiles/backup')
+        os.makedirs(dotfiles / 'backup', exist_ok=True)
         print(f'mv {home / ".xonshrc"} {dotfiles / "backup" / ".xonshrc"}')
         os.replace(home / '.xonshrc', dotfiles / 'backup' / '.xonshrc')
         print(f'ln -s {dotfiles / ".xonshrc"} {home / ".xonshrc"}')
@@ -58,6 +59,8 @@ else:
     ans = input(
         '# Already exist ~/.hyper.js . Do you want to override? [Y/n]').lower()
     if ans == 'y' or ans == 'yes':
+        print('mkdir -p ~/.dotfiles/backup')
+        os.makedirs(dotfiles / 'backup', exist_ok=True)
         print(f'mv {home / ".hyper.js"} {dotfiles / "backup" / ".hyper.js"}')
         os.replace(home / '.hyper.js', dotfiles / 'backup' / '.hyper.js')
         print(f'ln -s {hyper} {home / ".hyper.js"}')

@@ -86,5 +86,5 @@
     "audioCues.volume": 0,
     "go.toolsManagement.autoUpdate": true,
     "python.venvPath": "~/.virtualenvs",
-    "window.zoomLevel": 2
+    "editor.inlineSuggest.enabled": true
 }
