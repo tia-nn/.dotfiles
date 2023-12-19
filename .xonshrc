@@ -1,3 +1,6 @@
 #!/usr/bin/env xonsh
 
 source `~/.dotfiles/xonsh/.*[.](xsh|py)`
+
+if p'~/.xonshrc.local.xsh'.exists():
+    source `~/.xonshrc.local.xsh`

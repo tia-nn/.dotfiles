@@ -52,9 +52,10 @@ def _xonshrc_abbrevs():
     abbrevs['sx'] = head_only('source ~/.xonshrc')
     abbrevs['cx'] = head_only('code ~/.dotfiles')
 
-    abbrevs['devnull'] = '/dev/null'
+    abbrevs['dnull'] = '/dev/null'
+    abbrevs['sb'] = "source-bash '''\n<edit>\n'''"
 
-    # docker / podman
+    # docker / podmanc
     def docker_abbrevs():
         if (docker := os.getenv('DOCKER_COMMAND')):
             pass
@@ -118,7 +119,7 @@ def _xonshrc_abbrevs():
     abbrevs['gl'] = head_only('git log')
     abbrevs['gla'] = head_only('git log --graph --oneline --all')
     abbrevs['glh'] = head_only(
-        lambda word, buffer: f'git log --graph --oneline --first-parent --branches')
+        lambda word, buffer: f'git log --graph --oneline --first-parent --branches {get_current_branch()}')
     abbrevs['gln'] = head_only('git log --graph --oneline --all --max-count')
     abbrevs['glmn'] = head_only(
         lambda word, buffer: f'git log --graph --oneline --first-parent --branches {get_git_defaultbranch()} --max-count')
@@ -127,6 +128,7 @@ def _xonshrc_abbrevs():
 
     abbrevs['gb'] = head_only('git branch')
     abbrevs['gc'] = head_only('git commit --message "<edit>"')
+    abbrevs['gca'] = head_only('git commit --amend --no-edit')
     abbrevs['gm'] = head_only('git merge')
     abbrevs['grb'] = head_only('git rebase')
     abbrevs['grst'] = head_only('git reset')
