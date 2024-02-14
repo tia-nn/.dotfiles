@@ -129,6 +129,8 @@ def _xonshrc_abbrevs():
     abbrevs['gb'] = head_only('git branch')
     abbrevs['gc'] = head_only('git commit --message "<edit>"')
     abbrevs['gca'] = head_only('git commit --amend --no-edit')
+    abbrevs['gcam'] = head_only('git commit --amend --message "<edit>"')
+    abbrevs['gce'] = head_only('git commit --allow-empty --message "<edit>"')
     abbrevs['gm'] = head_only('git merge')
     abbrevs['grb'] = head_only('git rebase')
     abbrevs['grst'] = head_only('git reset')
