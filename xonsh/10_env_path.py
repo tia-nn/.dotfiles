@@ -3,14 +3,13 @@ def _xonshrc_env_path():
     from xonsh.tools import EnvPath
     from xonsh.built_ins import XSH
 
-    env = XSH.env
-    path = env['PATH']
+    from lib.typing_builtins import env, aliases, env_path
 
-    XSH.aliases['source-bash'](['--suppress-skip-message',
+    aliases['source-bash'](['--suppress-skip-message',
                                '~/.dotfiles/sh/paths'])
 
     # delete duplicated
-    env['PATH'] = EnvPath(sorted(set(path), key=path.index))
+    env['PATH'] = EnvPath(sorted(set(env_path), key=env_path.index))
 
 
 _xonshrc_env_path()

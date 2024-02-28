@@ -7,3 +7,4 @@ xonsh.traceback.log
 /reconnect-drvctl.sh
 /venvs/
 /backup/
+/local/

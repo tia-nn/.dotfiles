@@ -1,6 +1,9 @@
-from xonsh.built_ins import XSH
+from typing import cast
+from os import linesep
 
-env = XSH.env
+from xonsh.prompt.base import PromptFields
+
+from lib.typing_builtins import env
 
 # See https://xon.sh/envvars.html#interactive-prompt
 
@@ -39,12 +42,12 @@ env['MULTILINE_PROMPT'] = '>'
 # プロンプトテキスト。自動フォーマットされたキーワード引数を含めることができる。
 # この値は親プロセスから継承されることはない。
 # https://xon.sh/tutorial.html#customizing-the-prompt を参照。
-env['PROMPT'] = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}\n {RED}{prompt_end}  '
+env['PROMPT'] = '{INTENSE_BLUE}{user}{INTENSE_GREEN}@{INTENSE_BLUE}{hostname}{WHITE}:{cwd}' + linesep + ' {RED}{prompt_end}  '
 
 # $PROMPT_FIELDS: `$PROMPT` と `$TITLE` のフォーマットのときに使う変数を保存する辞書。
 # https://xon.sh/tutorial.html#customizing-the-prompt を参照。
-env['PROMPT_FIELDS']['env_prefix'] = '['
-env['PROMPT_FIELDS']['env_postfix'] = ']'
+cast(PromptFields, env['PROMPT_FIELDS'])['env_prefix'] = '['
+cast(PromptFields, env['PROMPT_FIELDS'])['env_postfix'] = ']'
 
 # `$PROMPT`, `$RIGHT_PROMPT`, `$BOTTOM_TOOLBAR` を評価、更新する間隔(秒)。デフォルトはゼロで更新しない。
 # この変数を有効にするには `$UPDATE_PROMPT_ON_KEYPRESS` を `True` にセットする必要がある。

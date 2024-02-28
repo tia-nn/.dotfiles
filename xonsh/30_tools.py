@@ -5,10 +5,11 @@ def _xonshrc_tools():
     from copy import copy
     import sys
     import os
+
     from xonsh.built_ins import XSH
     from xontrib.abbrevs import abbrevs
+    from lib.typing_builtins import aliases, env
 
-    aliases = XSH.aliases
 
     def load_envfile(args: List[str]):
         if args == []:
@@ -24,7 +25,7 @@ def _xonshrc_tools():
             envs.append(f.read())
             f.close()
 
-        XSH.aliases['source-bash']([f'''
+        aliases['source-bash']([f'''
             set -a
             {os.sep.join(envs)}
             set +a
@@ -51,7 +52,7 @@ def _xonshrc_tools():
         def pope(self, args: List[str]):
             verbose = '-v' in args
             ldenv = self.stack.pop()
-            denv = XSH.env.detype()
+            denv = env.detype()
 
             for k, v in ldenv.items():
                 if k in ['__ALIAS_NAME', '__ALIAS_STACK']:
@@ -60,19 +61,19 @@ def _xonshrc_tools():
                     continue
                 if verbose:
                     print('${0} = {1}  # before ${0} value is {2}'.format(
-                        k, repr(v), repr(XSH.env[k])))
-                XSH.env[k] = v
+                        k, repr(v), repr(env[k])))
+                env[k] = v
             for k in denv:
                 if k not in ldenv:
                     if k in ['__ALIAS_NAME', '__ALIAS_STACK']:
                         continue
                     if verbose:
                         print('del ${0}  # before ${0} value is {1}'.format(
-                            k, repr(XSH.env[k])))
-                    del XSH.env[k]
+                            k, repr(env[k])))
+                    del env[k]
 
         def pushe(self):
-            self.stack.append(copy(XSH.env.detype()))
+            self.stack.append(copy(env.detype()))
 
     def push_and_loadenv(args):
         __envstack__.pushe()
@@ -80,7 +81,7 @@ def _xonshrc_tools():
 
     global __envstack__
     try:
-        __envstack__ = __envstack__ if __envstack__ is not None else EnvStack()
+        __envstack__ = __envstack__ if __envstack__ is not None else EnvStack()  # type: ignore
     except NameError:
         __envstack__ = EnvStack()
 

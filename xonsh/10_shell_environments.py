@@ -1,7 +1,9 @@
 from xonsh.built_ins import XSH
 from pathlib import Path
 import subprocess
-env = XSH.env
+from lib.typing_builtins import env
+
+
 home = Path.home()
 
 # see https://xon.sh/envvars.html for details
@@ -24,7 +26,7 @@ env['XONSH_HISTORY_BACKEND'] = 'sqlite'
 # env['ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT'] = True
 env['CASE_SENSITIVE_COMPLETIONS'] = False
 
-env['COMPLETIONS_CONFIRM'] = False
+env['COMPLETIONS_CONFIRM'] = True
 # env['COMPLETION_MODE'] = 'menu-complete'
 # env['UPDATE_COMPLETIONS_ON_KEYPRESS'] = False
 

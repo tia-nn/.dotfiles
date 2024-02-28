@@ -135,7 +135,7 @@ def _xonshrc_abbrevs():
     abbrevs['grb'] = head_only('git rebase')
     abbrevs['grst'] = head_only('git reset')
     abbrevs['gsw'] = head_only('git switch')
-    abbrevs['gswc'] = head_only('git switch --create')
+    abbrevs['gsb'] = head_only('git switch --create')
     abbrevs['gtag'] = head_only('git tag')
 
     abbrevs['gf'] = head_only('git fetch')
