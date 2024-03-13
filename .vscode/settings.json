@@ -21,5 +21,6 @@
         "./xonsh"
     ],
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "python.defaultInterpreterPath": ".dotfiles/venvs/xonsh-misc/bin/python"
 }

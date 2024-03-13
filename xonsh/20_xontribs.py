@@ -3,6 +3,7 @@ def _xonshrc_xontribs():
     import subprocess
 
     from lib.typing_builtins import aliases
+    from lib.command import command
 
 
     def load_with_install(package_name: str, xontrib_name: str):
@@ -17,7 +18,8 @@ def _xonshrc_xontribs():
     load_with_install('xontrib-vox', 'vox')
     load_with_install('xonsh-vox-tabcomplete', 'vox_tabcomplete')
     load_with_install('xontrib-abbrevs', 'abbrevs')
-    load_with_install('xonsh-direnv', 'direnv')
+    if command('direnv'): 
+        load_with_install('xonsh-direnv', 'direnv')
     # load_with_install('xontrib-langenv', 'pyenv', ['pyenv', 'shell', '--unset'])
 
 
