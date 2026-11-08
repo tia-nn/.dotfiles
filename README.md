@@ -72,7 +72,8 @@ PATH と環境変数は [`shell/common/env.sh`](shell/common/env.sh) にまと�
 
 - その PC だけの設定は、`~/.config/xonsh/rc.d` に入口より後ろの名前（`90_local.xsh` など）で置く。dotfiles の設定の後に読まれるので、上書きできる。`~/.xonshrc` は rc.d より先に読まれるため、上書きには使えない。
 - 以前のように `~/.config/xonsh/rc.d` がリポジトリへのリンクになっていたら、`install.sh link` がそのリンクを退避して、普通のディレクトリにする。
-- rc.d は `xonsh -c` やスクリプトの実行でも読まれるので、xontrib・abbrevs などの対話用の設定は対話シェルでだけ読む。
+- 設定は xontrib（`dotfiles.env` など）に分けてある。rc.d は `xonsh -c` やスクリプトの実行でも読まれるので、`dotfiles.env`・`dotfiles.aliases` 以外（プロンプト・abbrevs・`loadenv` など）と外部の xontrib（abbrevs・vox）は対話シェルでだけ読む。読む順番は [`xontrib/dotfiles/__init__.py`](shell/xonsh/xontrib/dotfiles/__init__.py) にある。
+- 設定を変えたら `dotfiles-reload`（abbrev では `sx`）で読み込み直せる。1つだけなら `xontrib reload dotfiles.prompt` のようにする。
 - 環境変数
   - `$DOCKER_COMMAND`: abbrevs で使う Docker 互換のコマンド（未設定なら docker、なければ podman）
   - `$GIT_DEFAULTBRANCH`: abbrevs などで使うデフォルトブランチ名（未設定なら git の `init.defaultBranch`）

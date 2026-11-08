@@ -11,8 +11,10 @@ from pathlib import Path
 import pytest
 from helpers import REPO_ROOT
 
+from xontrib.dotfiles import xontrib_names
+from xontrib.dotfiles._changes import Changes
 from xontrib.dotfiles._git import current_branch, default_branch
-from xontrib.dotfiles._paths import dotfiles_dir, rc_files, state_dir, xonsh_dir
+from xontrib.dotfiles._paths import dotfiles_dir, state_dir, xonsh_dir
 
 XONSH_DIR = REPO_ROOT / "shell" / "xonsh"
 INSTALL = REPO_ROOT / "install.sh"
@@ -21,10 +23,13 @@ INSTALL = REPO_ROOT / "install.sh"
 # --- ファイルの形 ---
 
 
-def test_rc_d_contains_only_python_files() -> None:
-    files = sorted(p.name for p in (XONSH_DIR / "rc.d").iterdir())
-    assert files
-    assert all(name.endswith(".py") for name in files), files
+def test_rc_d_contains_only_the_entry() -> None:
+    assert sorted(p.name for p in (XONSH_DIR / "rc.d").iterdir()) == ["50_dotfiles.py"]
+
+
+def test_every_xontrib_exists() -> None:
+    for name in xontrib_names(interactive=True):
+        assert (XONSH_DIR / "xontrib" / (name.replace(".", "/") + ".py")).is_file(), name
 
 
 @pytest.mark.parametrize(
@@ -37,7 +42,7 @@ def test_every_file_is_valid_python(path: Path) -> None:
     compile(path.read_text(encoding="utf-8"), str(path), "exec")
 
 
-# --- lib/paths.py ---
+# --- xontrib/dotfiles/_paths.py ---
 
 
 def test_paths_use_dotfiles_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -51,20 +56,13 @@ def test_paths_fall_back_to_the_repository(monkeypatch: pytest.MonkeyPatch) -> N
     assert dotfiles_dir() == REPO_ROOT
 
 
-def test_rc_files_are_sorted(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("DOTFILES", str(REPO_ROOT))
-    names = [p.name for p in rc_files()]
-    assert names == sorted(names)
-    assert "50_dotfiles.py" in names
-
-
 def test_state_dir(monkeypatch: pytest.MonkeyPatch, home: Path, tmp_path: Path) -> None:
     assert state_dir() == home / ".local" / "state" / "xonsh"
     monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
     assert state_dir() == tmp_path / "state" / "xonsh"
 
 
-# --- lib/git.py ---
+# --- xontrib/dotfiles/_git.py ---
 
 
 @pytest.fixture
@@ -109,6 +107,22 @@ def test_git_helpers_without_git(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     assert default_branch() is None
 
 
+# --- xontrib/dotfiles/_changes.py ---
+
+
+def test_changes_restores_old_values_and_removes_new_keys() -> None:
+    mapping = {"a": 1}
+    changes = Changes()
+    changes.set(mapping, "a", 2)
+    changes.set(mapping, "b", 3)
+    changes.set(mapping, "a", 4)
+    assert mapping == {"a": 4, "b": 3}
+    changes.restore()
+    assert mapping == {"a": 1}
+    changes.restore()
+    assert mapping == {"a": 1}
+
+
 # --- 実際の xonsh で読み込む ---
 
 
@@ -123,7 +137,7 @@ def xonsh() -> str:
 def test_rc_d_is_loaded_by_xonsh_after_install(xonsh: str, home: Path) -> None:
     """install.sh link で ~/.config/xonsh/rc.d に入口をリンクし、xonsh が自分で読み込むことを確認する。
 
-    非対話（xonsh -c）なので、対話シェル専用の rc（xontrib のインストールや vox）は読まれない。
+    非対話（xonsh -c）なので、対話シェル専用の xontrib（prompt・abbrevs・envstack や vox）は読まれない。
     $DOTFILES は渡さず、入口のリンクから場所を決められることも確認する。
     """
     (home / ".local" / "bin").mkdir(parents=True)
@@ -132,7 +146,7 @@ def test_rc_d_is_loaded_by_xonsh_after_install(xonsh: str, home: Path) -> None:
 
     script = """
 print('@@', $DOTFILES, $XONSH_TRACEBACK_LOGFILE, $shell_type, sep='|')
-print('@@', 'git-prune-localbranch' in aliases, 'measure-xonshrc-time-performance' in aliases, sep='|')
+print('@@', 'git-prune-localbranch' in aliases, 'dotfiles-reload' in aliases, sep='|')
 print('@@', ':'.join($PATH), sep='|')
 print('@@', $XONSH_INTERACTIVE, 'loadenv' in aliases, sep='|')
 """
@@ -161,6 +175,5 @@ print('@@', $XONSH_INTERACTIVE, 'loadenv' in aliases, sep='|')
     assert path.count(local_bin) == 1
     assert path.index(local_bin) < path.index("/usr/bin")
 
-    # 対話シェル専用の rc（30_tools の loadenv など）は読まれていない
+    # 対話シェル専用の xontrib（envstack の loadenv など）は読まれていない
     assert lines[3] == ["False", "False"]
-    assert not (home / ".local" / "share" / "xonsh" / "vox").exists()

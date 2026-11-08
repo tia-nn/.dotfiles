@@ -18,11 +18,6 @@ def xonsh_dir() -> Path:
     return dotfiles_dir() / "shell" / "xonsh"
 
 
-def rc_files() -> list[Path]:
-    """rc.d のファイル（xonsh が読むのと同じ *.py）をファイル名の順に返す"""
-    return sorted((xonsh_dir() / "rc.d").glob("*.py"))
-
-
 def state_dir() -> Path:
     """ログなどの状態ファイルを置く場所（$XDG_STATE_HOME/xonsh）"""
     state_home = os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state"
