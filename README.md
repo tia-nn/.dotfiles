@@ -119,9 +119,9 @@ asdf install nodejs <バージョン> && asdf set -u nodejs <バージョン>
 Docker（Docker Desktop など）で、Debian・Fedora・Python 3.9 のコンテナを使う。テストはネットワークを使わない。
 
 ```sh
-docker compose run --rm debian    # shellcheck, ruff, mypy, pytest
+docker compose run --rm debian    # shellcheck, ruff, pytest
 docker compose run --rm fedora
-docker compose run --rm py39      # 対応する最も古い Python で pytest
+docker compose run --rm py39      # 対応する最も古い Python で mypy, pytest
 ```
 
 一部だけ実行する例:

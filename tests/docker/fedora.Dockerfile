@@ -19,4 +19,5 @@ RUN useradd --create-home --shell /bin/bash tester
 USER tester
 
 WORKDIR /dotfiles
-CMD ["sh", "tests/run.sh"]
+# mypy は Python 3.9 として型を確認するので、py39 のイメージで回す（pytest 9 は 3.10 以降の構文を使う）
+CMD ["sh", "tests/run.sh", "shellcheck", "ruff", "pytest"]

@@ -13,4 +13,5 @@ RUN useradd --create-home --shell /bin/bash tester
 USER tester
 
 WORKDIR /dotfiles
-CMD ["sh", "tests/run.sh", "pytest"]
+# mypy もここで回す（対応する一番古い Python で型を確認する）
+CMD ["sh", "tests/run.sh", "mypy", "pytest"]
