@@ -22,7 +22,10 @@ def extract_tar(archive: Path, dest: Path) -> None:
             return
         for member in tar.getmembers():
             _check_inside(dest, member.name)
-            if member.issym() or member.islnk():
+            if member.islnk():
+                # ハードリンクの linkname はアーカイブのルートから見たパス
+                _check_inside(dest, member.linkname)
+            elif member.issym():
                 _check_inside(dest, str(Path(member.name).parent / member.linkname))
             if member.isdev():
                 raise ValueError(f"device file in archive: {member.name}")

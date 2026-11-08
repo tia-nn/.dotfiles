@@ -82,6 +82,36 @@ def test_extract_tar_rejects_links_outside(tmp_path: Path) -> None:
         extract_tar(archive, dest)
 
 
+@pytest.mark.usefixtures("tar_mode")
+def test_extract_tar_rejects_hard_links_outside(tmp_path: Path) -> None:
+    """dir/../outside のように、シンボリックリンクとして見ると内側に見えるものも拒む"""
+    archive = tmp_path / "a.tar"
+    with tarfile.open(archive, "w") as tar:
+        info = tarfile.TarInfo("dir/x")
+        info.type = tarfile.LNKTYPE
+        info.linkname = "../outside"
+        tar.addfile(info)
+    dest = tmp_path / "out"
+    dest.mkdir()
+    with pytest.raises((ValueError, tarfile.TarError)):
+        extract_tar(archive, dest)
+
+
+@pytest.mark.usefixtures("tar_mode")
+def test_extract_tar_keeps_hard_links_inside(tmp_path: Path) -> None:
+    archive = tmp_path / "a.tar"
+    with tarfile.open(archive, "w") as tar:
+        add_file(tar, "top/file", b"hello")
+        info = tarfile.TarInfo("top/sub/link")
+        info.type = tarfile.LNKTYPE
+        info.linkname = "top/file"
+        tar.addfile(info)
+    dest = tmp_path / "out"
+    dest.mkdir()
+    extract_tar(archive, dest)
+    assert (dest / "top/sub/link").read_bytes() == b"hello"
+
+
 def test_extract_zip_files_flattens_and_filters(tmp_path: Path) -> None:
     archive = tmp_path / "a.zip"
     with zipfile.ZipFile(archive, "w") as zf:
