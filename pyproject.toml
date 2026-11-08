@@ -1,4 +1,7 @@
 # インストーラ（installer/）と xonsh の設定（shell/xonsh/）の開発ツールの設定。パッケージとして配布はしない。
+#   - インストーラは Python 3.9 でも動かす（mac の Command Line Tools の python3）。
+#   - xonsh の設定は、xonsh を動かす最新の Python（3.14）だけで動けばよい。
+#     mypy は Python のバージョンを1つしか指定できないので、shell/xonsh/mypy.ini に分けてある。
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -10,6 +13,10 @@ target-version = "py39"
 line-length = 110
 include = ["install.py", "links.py", "packages.py", "installer/**/*.py", "tests/**/*.py", "shell/xonsh/**/*.py"]
 
+[tool.ruff.per-file-target-version]
+"shell/xonsh/**/*.py" = "py314"
+"tests/xonshrc/**/*.py" = "py314"
+
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
@@ -18,15 +25,8 @@ known-first-party = ["installer", "xontrib.dotfiles"]
 
 [tool.mypy]
 python_version = "3.9"
-files = ["install.py", "links.py", "packages.py", "installer", "tests", "shell/xonsh"]
+files = ["install.py", "links.py", "packages.py", "installer", "tests"]
+exclude = ["^tests/xonshrc/"]
 strict = true
-mypy_path = ["tests", "shell/xonsh"]
-# shell/xonsh/xontrib は名前空間パッケージ（__init__.py がない）なので、mypy_path を起点にモジュール名を決める
-explicit_package_bases = true
+mypy_path = ["tests"]
 cache_dir = "/tmp/.mypy_cache"
-
-[[tool.mypy.overrides]]
-# xonsh には型情報（py.typed）がなく、Python 3.9 のテスト環境には xonsh も prompt_toolkit も入っていない。
-# XonshSession などは Any として扱う
-module = ["xonsh", "xonsh.*", "prompt_toolkit", "prompt_toolkit.*"]
-ignore_missing_imports = true

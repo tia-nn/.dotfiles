@@ -4,12 +4,10 @@ xontrib abbrevs（xontrib-abbrevs）を先に読んでおく必要がある。�
 展開した後の `<edit>` の位置にカーソルが移る。
 """
 
-from __future__ import annotations
-
 import os
 import shutil
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from xontrib.dotfiles._changes import Changes
 from xontrib.dotfiles._git import current_branch, default_branch
@@ -22,9 +20,9 @@ if TYPE_CHECKING:
 
 _changes = Changes()
 
-Expansion = Union[str, Callable[[], str]]
+type Expansion = str | Callable[[], str]
 """展開後の文字列。関数なら、展開するときに呼ぶ"""
-Abbrev = Callable[[str, "Buffer"], str]
+type Abbrev = Callable[[str, Buffer], str]
 """xontrib abbrevs に渡す関数（word, buffer を受け取り、置き換える文字列を返す）"""
 
 

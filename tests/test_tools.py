@@ -448,14 +448,6 @@ def test_xonsh_installs_only_missing_xontribs_into_an_existing_venv(ctx: Context
     assert "--upgrade pip" not in out
 
 
-def test_xonsh_packages_match_the_xontribs_loaded_by_the_rc() -> None:
-    from xontrib.dotfiles import EXTERNAL
-
-    assert sorted(p for p in xonsh.PACKAGES if p.startswith("xontrib-")) == sorted(
-        f"xontrib-{name}" for name in EXTERNAL
-    )
-
-
 def test_xonsh_venv_follows_xdg_data_home(
     ctx: Context, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

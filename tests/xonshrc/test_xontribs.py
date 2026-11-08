@@ -3,8 +3,6 @@
 xonsh の代わりに、env・aliases・abbrevs を dict で持つ FakeSession を渡して _load_xontrib_ を呼ぶ。
 """
 
-from __future__ import annotations
-
 import importlib
 import stat
 from collections.abc import Callable

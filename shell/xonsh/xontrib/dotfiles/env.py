@@ -3,8 +3,6 @@
 unload しても、env.sh で設定した環境変数は元に戻さない。
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 import xonsh

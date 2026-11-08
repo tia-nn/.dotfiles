@@ -1,7 +1,5 @@
 """shell/xonsh の設定のテスト。"""
 
-from __future__ import annotations
-
 import os
 import shutil
 import subprocess
@@ -11,7 +9,8 @@ from pathlib import Path
 import pytest
 from helpers import REPO_ROOT
 
-from xontrib.dotfiles import xontrib_names
+from installer.tools import xonsh as xonsh_tool
+from xontrib.dotfiles import EXTERNAL, xontrib_names
 from xontrib.dotfiles._changes import Changes
 from xontrib.dotfiles._git import current_branch, default_branch
 from xontrib.dotfiles._paths import dotfiles_dir, state_dir, xonsh_dir
@@ -25,6 +24,12 @@ INSTALL = REPO_ROOT / "install.sh"
 
 def test_rc_d_contains_only_the_entry() -> None:
     assert sorted(p.name for p in (XONSH_DIR / "rc.d").iterdir()) == ["50_dotfiles.py"]
+
+
+def test_the_installer_installs_the_xontribs_loaded_by_the_rc() -> None:
+    assert sorted(p for p in xonsh_tool.PACKAGES if p.startswith("xontrib-")) == sorted(
+        f"xontrib-{name}" for name in EXTERNAL
+    )
 
 
 def test_every_xontrib_exists() -> None:

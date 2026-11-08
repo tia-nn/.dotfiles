@@ -1,7 +1,5 @@
 """aliases。xonsh -c やスクリプトの実行でも使えるように、常に読む。"""
 
-from __future__ import annotations
-
 import re
 import subprocess
 import sys

@@ -1,6 +1,7 @@
 #!/bin/sh
 # 静的チェックとテストをまとめて実行する。
-#   sh tests/run.sh               # 全部（shellcheck, ruff, mypy, pytest）
+#   sh tests/run.sh               # インストーラなど（shellcheck, ruff, mypy, pytest）
+#   sh tests/run.sh mypy-xonsh pytest-xonsh   # xonsh の設定（Python 3.14 と xonsh が必要）
 #   sh tests/run.sh pytest mypy   # 指定したものだけ
 set -eu
 
@@ -16,7 +17,9 @@ for check in $checks; do
         shellcheck) set -- shellcheck -x install.sh tests/run.sh shell/common/env.sh shell/bash/*.sh ;;
         ruff) set -- ruff check . ;;
         mypy) set -- mypy ;;
-        pytest) set -- python3 -m pytest ;;
+        pytest) set -- python3 -m pytest --ignore=tests/xonshrc ;;
+        mypy-xonsh) set -- mypy --config-file shell/xonsh/mypy.ini ;;
+        pytest-xonsh) set -- python3 -m pytest tests/xonshrc ;;
         *)
             echo "unknown check: $check" >&2
             status=1

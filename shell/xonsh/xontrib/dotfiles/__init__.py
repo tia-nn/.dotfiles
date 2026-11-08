@@ -4,8 +4,6 @@ xonsh の名前空間パッケージ xontrib の下に置き、各モジュー�
 （`xontrib load dotfiles.<名前>`）。`_` で始まるモジュールは、xontrib から使う補助。
 """
 
-from __future__ import annotations
-
 ALWAYS = ("env", "aliases")
 """xonsh -c やスクリプトの実行でも読む"""
 INTERACTIVE = ("prompt", "abbrevs", "envstack")

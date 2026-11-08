@@ -3,8 +3,6 @@
 変数の意味と既定値は https://xon.sh/envvars.html を参照。
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from xontrib.dotfiles._changes import Changes

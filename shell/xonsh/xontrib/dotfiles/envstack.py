@@ -6,8 +6,6 @@
 - push-and-loadenv [FILE...]: pushe してから loadenv する
 """
 
-from __future__ import annotations
-
 import sys
 from typing import TYPE_CHECKING, Any
 

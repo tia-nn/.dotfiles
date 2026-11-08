@@ -1,7 +1,5 @@
 """xontrib が変えた値を覚えておき、unload のときに元に戻す。"""
 
-from __future__ import annotations
-
 from collections.abc import MutableMapping
 from typing import Any
 

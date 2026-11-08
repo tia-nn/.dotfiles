@@ -124,17 +124,20 @@ asdf install nodejs <バージョン> && asdf set -u nodejs <バージョン>
 │   ├── bash/
 │   ├── zsh/
 │   └── xonsh/          # rc.d/（入口）と xontrib/dotfiles/（設定の本体）
-└── tests/              # pytest のテストと Docker のファイル
+└── tests/              # pytest のテストと Docker のファイル（xonshrc/ は xonsh の設定のテスト）
 ```
 
 ## テスト
 
-Docker（Docker Desktop など）で、Debian・Fedora・Python 3.9 のコンテナを使う。テストはネットワークを使わない。
+Docker（Docker Desktop など）で、Debian・Fedora・Python 3.9・Python 3.14 のコンテナを使う。テストはネットワークを使わない。
+
+インストーラは Python 3.9（mac の Command Line Tools の python3）でも動くように、Python 3.9 で型を確かめる。xonsh の設定（`shell/xonsh/`）は xonsh を動かす最新の Python だけで動けばよいので、そのテスト（`tests/xonshrc/`）は Python 3.14 と、`install.sh tools xonsh` が入れるのと同じ xonsh・xontrib で実行する。
 
 ```sh
 docker compose run --rm debian    # shellcheck, ruff, pytest
 docker compose run --rm fedora
 docker compose run --rm py39      # 対応する最も古い Python で mypy, pytest
+docker compose run --rm py314     # xonsh の設定の mypy, pytest
 ```
 
 一部だけ実行する例:

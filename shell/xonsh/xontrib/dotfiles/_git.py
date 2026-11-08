@@ -1,7 +1,5 @@
 """abbrevs や aliases から使う git の情報。"""
 
-from __future__ import annotations
-
 import os
 import subprocess
 

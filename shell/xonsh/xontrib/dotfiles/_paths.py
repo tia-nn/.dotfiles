@@ -1,7 +1,5 @@
 """dotfiles と xonsh の設定ファイルの場所。"""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 
