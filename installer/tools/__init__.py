@@ -27,7 +27,7 @@ TOOLS = {
         Tool("git", "Set git global config (user, default branch, ...)", git.install),
         Tool("asdf", "Install asdf, its plugins and global versions in packages.py", asdf.install),
         Tool("xonsh", "Install xonsh into a venv and link ~/.local/bin/xonsh", xonsh.install),
-        Tool("npm", "Set npm prefix to ~/.npm (npm is installed by asdf)", npm.install),
+        Tool("npm", "Set npm prefix to ~/.local/share/npm (npm is installed by asdf)", npm.install),
         Tool("fonts", "Install Source Han Code JP and Nerd Fonts Symbols", fonts.install),
     ]
 }

@@ -389,6 +389,7 @@ def fake_npm(home: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Pat
     """asdf の shims にある npm の代わり。config get prefix は prefix ファイルの中身を返す"""
     monkeypatch.setenv("PATH", "/usr/bin:/bin")
     monkeypatch.delenv("ASDF_DATA_DIR", raising=False)
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     state = tmp_path / "prefix"
     state.write_text("/usr/local\n")
     write_script(
@@ -403,13 +404,20 @@ def fake_npm(home: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Pat
 
 def test_npm_sets_prefix_through_asdf_shims(ctx: Context, home: Path, fake_npm: Path) -> None:
     assert npm.install(ctx)
-    assert fake_npm.read_text() == f"{home}/.npm\n"
-    assert f"+ {home}/.asdf/shims/npm config set prefix {home}/.npm" in output(ctx)
+    assert fake_npm.read_text() == f"{home}/.local/share/npm\n"
+    assert f"+ {home}/.asdf/shims/npm config set prefix {home}/.local/share/npm" in output(ctx)
 
     ctx.out.seek(0)
     ctx.out.truncate()
     assert npm.install(ctx)
-    assert output(ctx) == f"ok: npm prefix {home}/.npm\n"
+    assert output(ctx) == f"ok: npm prefix {home}/.local/share/npm\n"
+
+
+def test_npm_prefix_follows_xdg_data_home(
+    ctx: Context, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    assert npm.prefix_dir(ctx) == tmp_path / "data/npm"
 
 
 @pytest.mark.usefixtures("no_commands")
@@ -419,10 +427,13 @@ def test_npm_is_required(ctx: Context) -> None:
 
 
 @pytest.mark.usefixtures("no_commands")
-def test_npm_dry_run_before_node_is_installed(ctx: Context, home: Path) -> None:
+def test_npm_dry_run_before_node_is_installed(
+    ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     ctx.dry_run = True
     assert npm.install(ctx)
-    assert output(ctx) == f"[dry-run] npm config set prefix {home}/.npm\n"
+    assert output(ctx) == f"[dry-run] npm config set prefix {home}/.local/share/npm\n"
 
 
 # --- fonts ---

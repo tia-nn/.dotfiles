@@ -39,7 +39,7 @@ def shell(request: pytest.FixtureRequest) -> str:
 
 @pytest.fixture
 def tools_home(home: Path) -> Path:
-    for d in [".local/bin", ".asdf/shims", ".npm/bin"]:
+    for d in [".local/bin", ".asdf/shims", ".local/share/npm/bin"]:
         (home / d).mkdir(parents=True)
     return home
 
@@ -54,7 +54,7 @@ def test_tool_directories_are_prepended_in_order(shell: str, tools_home: Path) -
     result = run_in(shell, tools_home, 'printf "%s" "$PATH"')
     h = tools_home
     assert result.stdout.split(":") == [
-        f"{h}/.npm/bin",
+        f"{h}/.local/share/npm/bin",
         f"{h}/.asdf/shims",
         f"{h}/.local/bin",
         *BASE_PATH.split(":"),
@@ -68,6 +68,20 @@ def test_asdf_shims_follow_asdf_data_dir(shell: str, home: Path, tmp_path: Path)
     assert result.stdout.split(":")[0] == f"{tmp_path}/asdf/shims"
 
 
+def test_npm_bin_follows_xdg_data_home(shell: str, home: Path, tmp_path: Path) -> None:
+    (tmp_path / "data" / "npm" / "bin").mkdir(parents=True)
+    result = run_in(shell, home, f'XDG_DATA_HOME={tmp_path}/data; . "$ENV_SH"; printf "%s" "$PATH"')
+    assert result.stdout.split(":")[0] == f"{tmp_path}/data/npm/bin"
+
+
+def test_npm_cache_alone_does_not_add_npm_bin(shell: str, home: Path) -> None:
+    """~/.npm は npm のキャッシュなので、あっても PATH には何も足さない"""
+    (home / ".npm" / "_cacache").mkdir(parents=True)
+    (home / ".npm" / "bin").mkdir()
+    result = run_in(shell, home, 'printf "%s" "$PATH"')
+    assert result.stdout == BASE_PATH
+
+
 def test_sourcing_twice_gives_the_same_path(shell: str, tools_home: Path) -> None:
     once = run_in(shell, tools_home, 'printf "%s" "$PATH"').stdout
     twice = run_in(shell, tools_home, '. "$ENV_SH"; printf "%s" "$PATH"').stdout
@@ -76,10 +90,10 @@ def test_sourcing_twice_gives_the_same_path(shell: str, tools_home: Path) -> Non
 
 def test_inherited_entries_are_moved_to_the_front(shell: str, tools_home: Path) -> None:
     """mac の path_helper のように、引き継いだ PATH の後ろに回された場合も先頭に戻す"""
-    inherited = f"{BASE_PATH}:{tools_home}/.local/bin:{tools_home}/.npm/bin"
+    inherited = f"{BASE_PATH}:{tools_home}/.local/bin:{tools_home}/.local/share/npm/bin"
     path = run_in(shell, tools_home, 'printf "%s" "$PATH"', path=inherited).stdout.split(":")
     assert path[:3] == [
-        f"{tools_home}/.npm/bin",
+        f"{tools_home}/.local/share/npm/bin",
         f"{tools_home}/.asdf/shims",
         f"{tools_home}/.local/bin",
     ]

@@ -37,7 +37,7 @@ cd ~/.dotfiles
 | `git` | `git config --global` の設定（ユーザー名など） |
 | `asdf` | [asdf](https://asdf-vm.com/) を `~/.local/bin` に入れ、Python・Node.js・Haxe・Neko を入れて既定のバージョンにする |
 | `xonsh` | xonsh を専用の venv に入れ、`~/.local/bin/xonsh` にリンクする |
-| `npm` | npm のグローバルインストール先を `~/.npm` にする（sudo なしで `npm install -g` できる） |
+| `npm` | npm のグローバルインストール先を `${XDG_DATA_HOME:-~/.local/share}/npm` にする（sudo なしで `npm install -g` できる） |
 | `fonts` | 源ノ角ゴシック Code と Nerd Fonts Symbols を入れる |
 
 Python はソースからビルドするので、初回は数分〜10分ほどかかる。

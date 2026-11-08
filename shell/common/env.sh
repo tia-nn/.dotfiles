@@ -61,9 +61,9 @@ fi
 # --- HashLink（asdf のプラグインがないので手で ~/.haxe-versions/hashlink に置く）---
 _dotfiles_path_prepend "$HOME/.haxe-versions/hashlink"
 
-# --- npm（グローバルインストール先。install.sh tools npm が prefix を ~/.npm にする）---
-if [ -d "$HOME/.npm" ]; then
-    export NPM_BIN="$HOME/.npm/bin"
+# --- npm（グローバルインストール先。install.sh tools npm が prefix を ${XDG_DATA_HOME:-~/.local/share}/npm にする）---
+if [ -d "${XDG_DATA_HOME:-$HOME/.local/share}/npm/bin" ]; then
+    export NPM_BIN="${XDG_DATA_HOME:-$HOME/.local/share}/npm/bin"
     _dotfiles_path_prepend "$NPM_BIN"
 fi
 
