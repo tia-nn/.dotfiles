@@ -8,8 +8,8 @@ def _xonshrc_abbrevs():
     from typing import Callable, Union
     from prompt_toolkit.buffer import Buffer
     import warnings
-    from lib.xonshrc_warnings import AbbrevsConfigSkipWarning, AbbrevsXontribNotInstalled
-    from lib.git import current_branch, default_branch
+    from xontrib.dotfiles._warnings import AbbrevsConfigSkipWarning, AbbrevsXontribNotInstalled
+    from xontrib.dotfiles._git import current_branch, default_branch
     import os
     import subprocess
 

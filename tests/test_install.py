@@ -15,6 +15,9 @@ from installer.links import load_entries, resolve
 from installer.osinfo import detect_os
 
 INSTALL = REPO_ROOT / "install.sh"
+# xonsh の rc の入口（rc.d にはこのファイルだけをリンクする）
+RC_ENTRY = ".config/xonsh/rc.d/50_dotfiles.py"
+RC_SRC = str(REPO_ROOT / "shell/xonsh/rc.d/50_dotfiles.py")
 
 
 def install(
@@ -42,7 +45,7 @@ def test_link_creates_every_link_for_this_os(home: Path) -> None:
 
 def test_link_is_the_default_command(home: Path) -> None:
     assert install().returncode == 0
-    assert (home / ".config/xonsh/rc.d").is_symlink()
+    assert (home / RC_ENTRY).is_symlink()
 
 
 def test_running_link_twice_changes_nothing_the_second_time(home: Path) -> None:
@@ -64,27 +67,50 @@ def test_dry_run_changes_nothing(home: Path) -> None:
     assert snapshot(home) == before
 
 
-def test_an_existing_directory_is_backed_up_under_xdg_state_home(home: Path) -> None:
-    (home / ".config/xonsh/rc.d").mkdir(parents=True)
-    (home / ".config/xonsh/rc.d/old.py").write_text("old\n")
+def test_an_existing_file_is_backed_up_under_xdg_state_home(home: Path) -> None:
+    (home / RC_ENTRY).parent.mkdir(parents=True)
+    (home / RC_ENTRY).write_text("old\n")
     assert install("link").returncode == 0
-    assert os.readlink(home / ".config/xonsh/rc.d") == str(REPO_ROOT / "shell/xonsh/rc.d")
-    backups = list((home / ".local/state/dotfiles/backup").glob("*/.config/xonsh/rc.d"))
+    assert os.readlink(home / RC_ENTRY) == RC_SRC
+    backups = list((home / ".local/state/dotfiles/backup").glob(f"*/{RC_ENTRY}"))
     assert len(backups) == 1
-    assert (backups[0] / "old.py").read_text() == "old\n"
+    assert backups[0].read_text() == "old\n"
+
+
+def test_other_files_in_xonsh_rc_d_are_kept(home: Path) -> None:
+    """PC ごとの設定を、入口のリンクと同じ rc.d に置ける"""
+    (home / ".config/xonsh/rc.d").mkdir(parents=True)
+    (home / ".config/xonsh/rc.d/90_local.xsh").write_text("local\n")
+    assert install("link").returncode == 0
+    assert os.readlink(home / RC_ENTRY) == RC_SRC
+    assert (home / ".config/xonsh/rc.d/90_local.xsh").read_text() == "local\n"
+    assert not (home / ".local/state/dotfiles/backup").exists()
+
+
+def test_an_old_link_of_the_whole_xonsh_rc_d_is_replaced_with_a_directory(home: Path) -> None:
+    """以前は rc.d をディレクトリごとリンクしていた。そのリンクの中（＝リポジトリの中）にリンクを作らない"""
+    old_link = home / ".config/xonsh/rc.d"
+    old_link.parent.mkdir(parents=True)
+    old_link.symlink_to(REPO_ROOT / "shell/xonsh/rc.d")
+    result = install("link")
+    assert result.returncode == 0, result.stderr
+    assert not old_link.is_symlink()
+    assert os.readlink(home / RC_ENTRY) == RC_SRC
+    backups = list((home / ".local/state/dotfiles/backup").glob("*/.config/xonsh/rc.d"))
+    assert [os.readlink(b) for b in backups] == [str(REPO_ROOT / "shell/xonsh/rc.d")]
 
 
 def test_works_when_the_repository_is_not_at_home_dotfiles(home: Path) -> None:
     assert not (home / ".dotfiles").exists()
     assert install("link").returncode == 0
-    assert os.readlink(home / ".config/xonsh/rc.d") == str(REPO_ROOT / "shell/xonsh/rc.d")
+    assert os.readlink(home / RC_ENTRY) == RC_SRC
 
 
 def test_works_with_cdpath_and_a_relative_path(home: Path) -> None:
     parent = REPO_ROOT.parent
     result = install("link", script=f"{REPO_ROOT.name}/install.sh", cwd=parent, CDPATH=str(parent))
     assert result.returncode == 0, result.stderr
-    assert os.readlink(home / ".config/xonsh/rc.d") == str(REPO_ROOT / "shell/xonsh/rc.d")
+    assert os.readlink(home / RC_ENTRY) == RC_SRC
 
 
 def test_unknown_command_and_option_fail(home: Path) -> None:

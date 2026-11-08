@@ -6,8 +6,8 @@ def _xonshrc_aliases():
 
     from xonsh.built_ins import XSH
 
-    from lib.git import default_branch
-    from lib.paths import rc_files
+    from xontrib.dotfiles._git import default_branch
+    from xontrib.dotfiles._paths import rc_files
 
     # マージ済みでも消さないブランチ
     protected = re.compile(r'\*|main|master|develop|release')

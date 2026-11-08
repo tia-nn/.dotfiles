@@ -1,7 +1,7 @@
 def _xonshrc_env_path():
     from xonsh.built_ins import XSH
 
-    from lib.paths import dotfiles_dir
+    from xontrib.dotfiles._paths import dotfiles_dir
 
     # 共通層（PATH と環境変数）を読む。重複は env.sh の側で取り除く
     dotfiles = dotfiles_dir()

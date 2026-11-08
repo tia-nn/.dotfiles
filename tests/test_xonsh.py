@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from helpers import REPO_ROOT
 
-from lib.git import current_branch, default_branch
-from lib.paths import dotfiles_dir, rc_files, state_dir, xonsh_dir
+from xontrib.dotfiles._git import current_branch, default_branch
+from xontrib.dotfiles._paths import dotfiles_dir, rc_files, state_dir, xonsh_dir
 
 XONSH_DIR = REPO_ROOT / "shell" / "xonsh"
 INSTALL = REPO_ROOT / "install.sh"
@@ -51,11 +51,11 @@ def test_paths_fall_back_to_the_repository(monkeypatch: pytest.MonkeyPatch) -> N
     assert dotfiles_dir() == REPO_ROOT
 
 
-def test_rc_files_are_sorted_and_start_with_import_path(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_rc_files_are_sorted(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DOTFILES", str(REPO_ROOT))
     names = [p.name for p in rc_files()]
     assert names == sorted(names)
-    assert names[0] == "00_import_path.py"
+    assert "50_dotfiles.py" in names
 
 
 def test_state_dir(monkeypatch: pytest.MonkeyPatch, home: Path, tmp_path: Path) -> None:
@@ -121,10 +121,10 @@ def xonsh() -> str:
 
 
 def test_rc_d_is_loaded_by_xonsh_after_install(xonsh: str, home: Path) -> None:
-    """install.sh link で ~/.config/xonsh/rc.d をリンクし、xonsh が自分で読み込むことを確認する。
+    """install.sh link で ~/.config/xonsh/rc.d に入口をリンクし、xonsh が自分で読み込むことを確認する。
 
     非対話（xonsh -c）なので、対話シェル専用の rc（xontrib のインストールや vox）は読まれない。
-    $DOTFILES は渡さず、rc.d のリンクから場所を決められることも確認する。
+    $DOTFILES は渡さず、入口のリンクから場所を決められることも確認する。
     """
     (home / ".local" / "bin").mkdir(parents=True)
     result = subprocess.run(["sh", str(INSTALL), "link"], capture_output=True, text=True, check=False)

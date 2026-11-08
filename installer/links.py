@@ -80,16 +80,37 @@ def make_link(link: Link, ctx: Context, *, require_src: bool = True) -> bool:
     if require_src and not src.exists():
         ctx.warn(f"source not found: {src}")
         return False
-    if dest.is_symlink() and Path(os.readlink(dest)) == src:
-        ctx.info(f"ok: {dest}")
-        return True
-    if dest.exists() or dest.is_symlink():
-        backup = ctx.backup_path(dest)
-        ctx.mkdir(backup.parent)
-        ctx.move(dest, backup)
+    # 親ごと退避したときは、dest はもうない（dry-run では残って見えるが、確認しない）
+    if not _move_away_parent_linked_into_repo(dest, ctx):
+        if dest.is_symlink() and Path(os.readlink(dest)) == src:
+            ctx.info(f"ok: {dest}")
+            return True
+        if dest.exists() or dest.is_symlink():
+            backup = ctx.backup_path(dest)
+            ctx.mkdir(backup.parent)
+            ctx.move(dest, backup)
     ctx.mkdir(dest.parent)
     ctx.symlink(src, dest)
     return True
+
+
+def _move_away_parent_linked_into_repo(dest: Path, ctx: Context) -> bool:
+    """dest の親ディレクトリのうち、リポジトリの中を指すシンボリックリンクを退避する。退避したら True。
+
+    以前はディレクトリごとリンクしていた場所（~/.config/xonsh/rc.d など）の中にリンクを作ると、
+    リポジトリの中にリンクを作ってしまう。古いリンクを退避して、実際のディレクトリにする。
+    """
+    repo = ctx.dotfiles.resolve()
+    for parent in reversed(dest.parents):
+        if not parent.is_symlink():
+            continue
+        target = parent.resolve()
+        if target == repo or repo in target.parents:
+            backup = ctx.backup_path(parent)
+            ctx.mkdir(backup.parent)
+            ctx.move(parent, backup)
+            return True
+    return False
 
 
 def link_all(entries: list[Entry], ctx: Context) -> bool:

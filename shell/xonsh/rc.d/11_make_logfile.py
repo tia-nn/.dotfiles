@@ -4,7 +4,7 @@ def _xonshrc_make_logfile():
 
     from xonsh.built_ins import XSH
 
-    from lib.xonshrc_warnings import AutoInitializedWarning
+    from xontrib.dotfiles._warnings import AutoInitializedWarning
 
     logfile = XSH.env.get('XONSH_TRACEBACK_LOGFILE')
     if logfile is None:

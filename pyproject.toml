@@ -14,7 +14,7 @@ include = ["install.py", "links.py", "packages.py", "installer/**/*.py", "tests/
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["installer", "lib"]
+known-first-party = ["installer", "xontrib.dotfiles"]
 
 [tool.ruff.lint.per-file-ignores]
 # xonsh の rc は、未定義の名前や使っていない import などの誤りだけを確認する（F）
@@ -22,7 +22,7 @@ known-first-party = ["installer", "lib"]
 
 [tool.mypy]
 python_version = "3.9"
-# shell/xonsh/rc.d は xonsh の中で動くので対象外。lib/ はテストからの import をたどって確認する
+# shell/xonsh/rc.d は xonsh の中で動くので対象外。xontrib/dotfiles/ はテストからの import をたどって確認する
 files = ["install.py", "links.py", "packages.py", "installer", "tests"]
 strict = true
 mypy_path = ["tests", "shell/xonsh"]

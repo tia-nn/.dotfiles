@@ -68,9 +68,10 @@ PATH と環境変数は [`shell/common/env.sh`](shell/common/env.sh) にまと�
 
 ### xonsh
 
-`shell/xonsh/rc.d/` を `~/.config/xonsh/rc.d` にリンクする。xonsh はここにある `*.py` を名前の順に読む（xonsh の標準の仕組み）。
+入口の [`shell/xonsh/rc.d/50_dotfiles.py`](shell/xonsh/rc.d/50_dotfiles.py) を `~/.config/xonsh/rc.d/50_dotfiles.py` にリンクする。xonsh は `~/.config/xonsh/rc.d` にある `*.py` / `*.xsh` を名前の順に読む（xonsh の標準の仕組み）。設定の本体は [`shell/xonsh/xontrib/dotfiles/`](shell/xonsh/xontrib/dotfiles/) にあり、入口から読む。
 
-- `~/.xonshrc` は使っていないので、その PC だけの設定を書く場所にできる。
+- その PC だけの設定は、`~/.config/xonsh/rc.d` に入口より後ろの名前（`90_local.xsh` など）で置く。dotfiles の設定の後に読まれるので、上書きできる。`~/.xonshrc` は rc.d より先に読まれるため、上書きには使えない。
+- 以前のように `~/.config/xonsh/rc.d` がリポジトリへのリンクになっていたら、`install.sh link` がそのリンクを退避して、普通のディレクトリにする。
 - rc.d は `xonsh -c` やスクリプトの実行でも読まれるので、xontrib・abbrevs などの対話用の設定は対話シェルでだけ読む。
 - 環境変数
   - `$DOCKER_COMMAND`: abbrevs で使う Docker 互換のコマンド（未設定なら docker、なければ podman）
@@ -88,7 +89,7 @@ PATH と環境変数は [`shell/common/env.sh`](shell/common/env.sh) にまと�
 | リンクする設定ファイル | [`links.py`](links.py) |
 | OS のパッケージ、asdf のプラグインと既定のバージョン | [`packages.py`](packages.py) |
 | PATH・環境変数 | [`shell/common/env.sh`](shell/common/env.sh)（POSIX sh で書く） |
-| xonsh の設定 | [`shell/xonsh/rc.d/`](shell/xonsh/rc.d/)（`.py` で書く） |
+| xonsh の設定 | [`shell/xonsh/xontrib/dotfiles/`](shell/xonsh/xontrib/dotfiles/)（`.py` で書く） |
 | git の設定 | [`installer/tools/git.py`](installer/tools/git.py) |
 
 asdf で入れたツールのバージョンを上げるときは手で行う（`~/.tool-versions` にあるものはインストーラが変えないため）。
@@ -110,7 +111,7 @@ asdf install nodejs <バージョン> && asdf set -u nodejs <バージョン>
 │   ├── common/         # どのシェルからも読む PATH・環境変数
 │   ├── bash/
 │   ├── zsh/
-│   └── xonsh/          # rc.d/ と、そこから使う lib/
+│   └── xonsh/          # rc.d/（入口）と xontrib/dotfiles/（設定の本体）
 └── tests/              # pytest のテストと Docker のファイル
 ```
 

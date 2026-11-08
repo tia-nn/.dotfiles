@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# shell/xonsh/lib/paths.py → リポジトリの直下
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+# shell/xonsh/xontrib/dotfiles/_paths.py → リポジトリの直下
+_REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 def dotfiles_dir() -> Path:

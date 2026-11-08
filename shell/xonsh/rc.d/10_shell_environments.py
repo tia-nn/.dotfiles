@@ -1,7 +1,7 @@
 import xonsh
 from xonsh.built_ins import XSH
 
-from lib.paths import state_dir, xonsh_dir
+from xontrib.dotfiles._paths import state_dir, xonsh_dir
 
 env = XSH.env
 
