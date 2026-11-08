@@ -16,14 +16,17 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 [tool.ruff.lint.isort]
 known-first-party = ["installer", "xontrib.dotfiles"]
 
-[tool.ruff.lint.per-file-ignores]
-# xonsh の rc は、未定義の名前や使っていない import などの誤りだけを確認する（F）
-"shell/xonsh/rc.d/*.py" = ["E", "W", "I", "UP", "B", "SIM"]
-
 [tool.mypy]
 python_version = "3.9"
-# shell/xonsh/rc.d は xonsh の中で動くので対象外。xontrib/dotfiles/ はテストからの import をたどって確認する
-files = ["install.py", "links.py", "packages.py", "installer", "tests"]
+files = ["install.py", "links.py", "packages.py", "installer", "tests", "shell/xonsh"]
 strict = true
 mypy_path = ["tests", "shell/xonsh"]
+# shell/xonsh/xontrib は名前空間パッケージ（__init__.py がない）なので、mypy_path を起点にモジュール名を決める
+explicit_package_bases = true
 cache_dir = "/tmp/.mypy_cache"
+
+[[tool.mypy.overrides]]
+# xonsh には型情報（py.typed）がなく、Python 3.9 のテスト環境には xonsh も prompt_toolkit も入っていない。
+# XonshSession などは Any として扱う
+module = ["xonsh", "xonsh.*", "prompt_toolkit", "prompt_toolkit.*"]
+ignore_missing_imports = true

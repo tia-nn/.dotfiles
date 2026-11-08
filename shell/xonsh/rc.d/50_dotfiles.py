@@ -7,7 +7,7 @@ rc ファイルはシェルと同じ名前空間で実行されるので、名�
 """
 
 
-def _dotfiles_rc():
+def _dotfiles_rc() -> None:
     import sys
     from pathlib import Path
 
