@@ -89,12 +89,48 @@ def test_shell_loads_dotfiles(argv: list[str], skel_home: Path) -> None:
     assert len(path) == len(set(path)), path
 
 
-def test_zsh_generates_asdf_completion_once(skel_home: Path) -> None:
-    if not (skel_home / ".zshrc").exists():
+def run_zsh(home: Path, command: str) -> str:
+    """対話の zsh で command を実行し、MARKER の後ろの出力を返す"""
+    if not (home / ".zshrc").exists():
         pytest.skip("zsh was not set up (zsh is not installed)")
-    report(["zsh", "-i", "-c"], skel_home)
+    result = subprocess.run(
+        ["zsh", "-i", "-c", f'printf "{MARKER}%s\\n" "$({command})"'],
+        env={"HOME": str(home), "PATH": "/usr/bin:/bin", "TERM": "dumb"},
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    lines = [line for line in result.stdout.splitlines() if line.startswith(MARKER)]
+    assert len(lines) == 1, result.stdout + result.stderr
+    return lines[0][len(MARKER) :]
+
+
+def test_zsh_generates_asdf_completion_once(skel_home: Path) -> None:
+    run_zsh(skel_home, "true")
     completion = skel_home / ".asdf" / "completions" / "_asdf"
     assert completion.read_text().startswith("#compdef asdf")
+
+    # asdf のほうが古ければ作り直さない
+    completion.write_text("#compdef asdf\n# kept\n")
+    run_zsh(skel_home, "true")
+    assert completion.read_text().endswith("# kept\n")
+
+
+def test_zsh_regenerates_asdf_completion_after_asdf_is_updated(skel_home: Path) -> None:
+    completion = skel_home / ".asdf" / "completions" / "_asdf"
+    completion.parent.mkdir(parents=True)
+    completion.write_text("#compdef asdf\n# old\n")
+    os.utime(completion, (0, 0))
+    run_zsh(skel_home, "true")
+    assert "# old" not in completion.read_text()
+
+
+def test_zsh_enables_completion_without_asdf(skel_home: Path) -> None:
+    (skel_home / ".local" / "bin" / "asdf").unlink()
+    assert run_zsh(skel_home, "print -r -- $+functions[compdef]") == "1"
 
 
 def test_bashrc_is_read_once_in_a_login_interactive_bash(skel_home: Path) -> None:
