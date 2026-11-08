@@ -51,6 +51,11 @@ def test_render_merges_duplicated_blocks_into_the_first() -> None:
     assert render(text, "z") == lines("a", BEGIN, "z", END, "b", "c")
 
 
+def test_render_accepts_markers_with_trailing_whitespace() -> None:
+    text = lines("before", BEGIN + "  ", "old", END + "\t", "after")
+    assert render(text, "new") == lines("before", BEGIN, "new", END, "after")
+
+
 def test_render_rejects_an_unterminated_block() -> None:
     with pytest.raises(UnterminatedBlockError):
         render(lines("before", BEGIN, "keep-me"), "x")

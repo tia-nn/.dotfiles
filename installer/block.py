@@ -26,15 +26,17 @@ def render(text: str, body: str) -> str:
     - ブロックが複数あれば、最初の位置に1つだけ残す。
     """
     lines = text.splitlines()
+    # 手で編集して行末に空白が付いても、マーカーの行とみなす
+    marks = [line.rstrip() for line in lines]
     block = [BEGIN, *body.splitlines(), END] if body else []
 
     result: list[str] = []
     inserted = False
     i = 0
     while i < len(lines):
-        if lines[i] == BEGIN:
+        if marks[i] == BEGIN:
             try:
-                end = lines.index(END, i + 1)
+                end = marks.index(END, i + 1)
             except ValueError:
                 raise UnterminatedBlockError(f"'{BEGIN}' without '{END}'") from None
             if not inserted:
