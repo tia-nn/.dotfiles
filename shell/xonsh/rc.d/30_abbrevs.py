@@ -1,12 +1,17 @@
 def _xonshrc_abbrevs():
-    from typing import Optional, List, Callable, Union
+    from xonsh.built_ins import XSH
+
+    # 対話シェルだけで使う（xonsh -c やスクリプトの実行では読まない）
+    if not XSH.env.get('XONSH_INTERACTIVE'):
+        return
+
+    from typing import Callable, Union
     from prompt_toolkit.buffer import Buffer
     import warnings
     from lib.xonshrc_warnings import AbbrevsConfigSkipWarning, AbbrevsXontribNotInstalled
+    from lib.git import current_branch, default_branch
     import os
     import subprocess
-
-    from xonsh.built_ins import XSH
 
     try:
         from xontrib.abbrevs import abbrevs
@@ -39,19 +44,12 @@ def _xonshrc_abbrevs():
                 return word
         return abbr_func
 
+    # 分からないときは、あとで書き換える目印を入れる
     def get_git_defaultbranch():
-        if (b := os.getenv('GIT_DEFAULTBRANCH')):
-            return b
-        if (git_conf := subprocess.run(('git', 'config', 'init.defaultBranch'), capture_output=True)).returncode == 0:
-            return git_conf.stdout.decode().rstrip()
-        else:
-            return '<edit>'
+        return default_branch() or '<edit>'
 
     def get_current_branch():
-        if (r := subprocess.run(('git', 'rev-pars', '--abbrev-ref', 'HEAD'), capture_output=True)).returncode == 0:
-            return r.stdout.decode().rstrip()
-        else:
-            return '<edit>'
+        return current_branch() or '<edit>'
 
     # tools
     abbrevs['cp'] = head_only('cp -r')
@@ -121,7 +119,7 @@ def _xonshrc_abbrevs():
     abbrevs['grstrh'] = head_only('git restore --source HEAD')
     abbrevs['grm'] = head_only('git rm')
     abbrevs['grmc'] = head_only('git rm --cached')
-    abbrevs['gsch'] = head_only('git sparce-checkout')
+    abbrevs['gsch'] = head_only('git sparse-checkout')
 
     abbrevs['gbis'] = head_only('git bisect')
     abbrevs['gd'] = head_only('git diff')

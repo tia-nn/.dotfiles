@@ -3,7 +3,6 @@
 /instant/xonsh
 /font
 
-xonsh.traceback.log
 /reconnect-drvctl.sh
 /venvs/
 /backup/

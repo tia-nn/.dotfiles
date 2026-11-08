@@ -18,6 +18,6 @@
         "Xontrib"
     ],
     "python.analysis.extraPaths": [
-        "./xonsh"
+        "./shell/xonsh"
     ]
 }

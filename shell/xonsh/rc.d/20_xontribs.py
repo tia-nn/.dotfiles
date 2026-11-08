@@ -1,5 +1,11 @@
 def _xonshrc_xontribs():
-    from typing import List, Union, Optional
+    from xonsh.built_ins import XSH
+
+    # 対話シェルだけで使う（xonsh -c やスクリプトの実行では読まない）
+    if not XSH.env.get('XONSH_INTERACTIVE'):
+        return
+
+    from typing import List, Union
     from xonsh.xontribs import xontribs_load, ExitCode
     from xonsh.built_ins import XSH
     import subprocess

@@ -1,13 +1,16 @@
+import xonsh
 from xonsh.built_ins import XSH
-from pathlib import Path
-import subprocess
+
+from lib.paths import state_dir, xonsh_dir
+
 env = XSH.env
-home = Path.home()
 
 # see https://xon.sh/envvars.html for details
 
 env['FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE'] = True
-env['XONSH_TRACEBACK_LOGFILE'] = str(home / '.xonsh.traceback.log')
+# 置き場所のディレクトリがないと、xonsh は黙って None にしてしまうので先に作る
+state_dir().mkdir(parents=True, exist_ok=True)
+env['XONSH_TRACEBACK_LOGFILE'] = str(state_dir() / 'traceback.log')
 
 # env['AUTO_SUGGEST'] = True
 # env['AUTO_SUGGEST_IN_COMPLETION'] = False
@@ -28,13 +31,11 @@ env['COMPLETIONS_CONFIRM'] = False
 # env['COMPLETION_MODE'] = 'menu-complete'
 # env['UPDATE_COMPLETIONS_ON_KEYPRESS'] = False
 
-env['BASH_COMPLETIONS'] = '~/.dotfiles/xonsh/bash_completions.bash'
+env['BASH_COMPLETIONS'] = str(xonsh_dir() / 'bash_completions.bash')
 
 
-# for screenfetch
-env['shell_type'] = subprocess.run(
-    ('xonsh', '-V'), capture_output=True
-).stdout.decode().rstrip()
+# for screenfetch（`xonsh -V` と同じ形。起動のたびに xonsh を実行しないよう、バージョンから作る）
+env['shell_type'] = f'xonsh/{xonsh.__version__}'
 
 
 # warnings.filterwarnings("ignore", category=DeprecationWarning)

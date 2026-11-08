@@ -1,6 +1,11 @@
 def _xonshrc_tools():
-    from typing import List, Dict, Optional, Deque, Any
-    from pprint import pprint
+    from xonsh.built_ins import XSH
+
+    # 対話シェルだけで使う（xonsh -c やスクリプトの実行では読まない）
+    if not XSH.env.get('XONSH_INTERACTIVE'):
+        return
+
+    from typing import List, Dict, Deque, Any
     from collections import deque
     from copy import copy
     import sys

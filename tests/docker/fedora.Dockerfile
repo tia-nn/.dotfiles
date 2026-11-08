@@ -8,7 +8,7 @@ ENV LANG=C.UTF-8 \
     PATH=/opt/venv/bin:$PATH
 
 RUN dnf install -y --setopt=install_weak_deps=False \
-        python3 ShellCheck zsh diffutils findutils shadow-utils \
+        python3 ShellCheck zsh git-core diffutils findutils shadow-utils \
     && dnf clean all
 
 COPY requirements.txt /tmp/requirements.txt
