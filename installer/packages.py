@@ -46,7 +46,12 @@ def sudo() -> list[str]:
 def install_commands(manager: str, names: list[str]) -> list[list[str]]:
     """names をインストールするコマンドの一覧"""
     if manager == "apt":
-        return [[*sudo(), "apt-get", "update"], [*sudo(), "apt-get", "install", "-y", *names]]
+        # tzdata などの設定画面で止まらないようにする（sudo は環境変数を引き継がないので env で渡す）
+        noninteractive = ["env", "DEBIAN_FRONTEND=noninteractive"]
+        return [
+            [*sudo(), "apt-get", "update"],
+            [*sudo(), *noninteractive, "apt-get", "install", "-y", *names],
+        ]
     if manager == "dnf":
         return [[*sudo(), "dnf", "install", "-y", *names]]
     return [["brew", "install", *names]]

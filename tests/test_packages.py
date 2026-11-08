@@ -53,7 +53,10 @@ def test_install_commands_use_sudo_unless_root(monkeypatch: pytest.MonkeyPatch) 
     assert install_commands("dnf", ["a", "b"]) == [["sudo", "dnf", "install", "-y", "a", "b"]]
     assert install_commands("brew", ["a"]) == [["brew", "install", "a"]]
     monkeypatch.setattr(os, "geteuid", lambda: 0)
-    assert install_commands("apt", ["a"]) == [["apt-get", "update"], ["apt-get", "install", "-y", "a"]]
+    assert install_commands("apt", ["a"]) == [
+        ["apt-get", "update"],
+        ["env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "install", "-y", "a"],
+    ]
 
 
 @pytest.mark.usefixtures("apt")
@@ -63,6 +66,7 @@ def test_install_packages_installs_only_missing_ones(ctx: Context) -> None:
     lines = output(ctx).splitlines()
     assert "[dry-run] sudo apt-get update" in lines
     install_line = next(line for line in lines if "apt-get install" in line)
+    assert install_line.startswith("[dry-run] sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y ")
     assert " unzip " in install_line + " "
     assert " git " not in install_line + " "
     assert " curl " not in install_line + " "
