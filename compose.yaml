@@ -1,0 +1,31 @@
+# テスト用のコンテナ。リポジトリは読み取り専用でマウントする（テストがリポジトリを書き換えないことの確認も兼ねる）。
+#
+#   docker compose run --rm debian    # Debian で全部（shellcheck, ruff, mypy, pytest）
+#   docker compose run --rm fedora    # Fedora で全部
+#   docker compose run --rm py39      # Python 3.9 で pytest
+#   docker compose run --rm debian sh tests/run.sh pytest                     # 一部だけ
+#   docker compose run --rm debian python3 -m pytest tests/test_links.py -k backup
+#   docker compose build              # イメージを作り直す（requirements.txt を変えたとき）
+
+x-common: &common
+  volumes:
+    - .:/dotfiles:ro
+
+services:
+  debian:
+    <<: *common
+    build:
+      context: tests/docker
+      dockerfile: debian.Dockerfile
+
+  fedora:
+    <<: *common
+    build:
+      context: tests/docker
+      dockerfile: fedora.Dockerfile
+
+  py39:
+    <<: *common
+    build:
+      context: tests/docker
+      dockerfile: py39.Dockerfile

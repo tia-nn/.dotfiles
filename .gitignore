@@ -7,3 +7,5 @@ xonsh.traceback.log
 /reconnect-drvctl.sh
 /venvs/
 /backup/
+
+__pycache__/
