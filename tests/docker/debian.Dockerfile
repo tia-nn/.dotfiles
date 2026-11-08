@@ -8,7 +8,7 @@ ENV LANG=C.UTF-8 \
     PATH=/opt/venv/bin:$PATH
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 python3-venv shellcheck \
+    && apt-get install -y --no-install-recommends python3 python3-venv shellcheck zsh \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt

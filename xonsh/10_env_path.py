@@ -1,16 +1,14 @@
 def _xonshrc_env_path():
-    from xonsh.tools import EnvPath
-    from xonsh.tools import EnvPath
+    import os
+    from pathlib import Path
+
     from xonsh.built_ins import XSH
 
-    env = XSH.env
-    path = env['PATH']
-
+    # 共通層（PATH と環境変数）を読む。重複は env.sh の側で取り除く
+    dotfiles = os.environ.get('DOTFILES') or str(Path.home() / '.dotfiles')
+    XSH.env['DOTFILES'] = dotfiles
     XSH.aliases['source-bash'](['--suppress-skip-message',
-                               '~/.dotfiles/sh/paths'])
-
-    # delete duplicated
-    env['PATH'] = EnvPath(sorted(set(path), key=path.index))
+                               str(Path(dotfiles) / 'shell' / 'common' / 'env.sh')])
 
 
 _xonshrc_env_path()

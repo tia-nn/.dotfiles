@@ -12,7 +12,8 @@ status=0
 for check in $checks; do
     echo "==> $check"
     case $check in
-        shellcheck) set -- shellcheck --shell=sh install.sh tests/run.sh ;;
+        # シェルの種類は各ファイルの shebang か `# shellcheck shell=...` で決まる（zsh は対象外）
+        shellcheck) set -- shellcheck -x install.sh tests/run.sh shell/common/env.sh shell/bash/*.sh ;;
         ruff) set -- ruff check . ;;
         mypy) set -- mypy ;;
         pytest) set -- python3 -m pytest ;;

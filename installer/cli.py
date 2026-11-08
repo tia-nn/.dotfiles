@@ -13,6 +13,7 @@ from typing import Callable
 from .context import Context
 from .links import link_all, load_entries
 from .osinfo import detect_os
+from .shellrc import setup_shells
 
 DOTFILES = Path(__file__).resolve().parent.parent
 
@@ -24,7 +25,11 @@ def cmd_link(ctx: Context) -> bool:
     except ValueError as e:
         ctx.warn(str(e))
         return False
-    return link_all(entries, ctx)
+    links_ok = link_all(entries, ctx)
+
+    ctx.info("==> shell rc")
+    shells_ok = setup_shells(ctx)
+    return links_ok and shells_ok
 
 
 def cmd_packages(ctx: Context) -> bool:
@@ -42,7 +47,7 @@ def cmd_all(ctx: Context) -> bool:
 
 
 COMMANDS: dict[str, tuple[Callable[[Context], bool], str]] = {
-    "link": (cmd_link, "Create symlinks listed in links.py (default)"),
+    "link": (cmd_link, "Create symlinks listed in links.py and set up shell rc files (default)"),
     "packages": (cmd_packages, "Install OS packages (not implemented yet)"),
     "tools": (cmd_tools, "Install tools such as xonsh and fonts (not implemented yet)"),
     "all": (cmd_all, "Run all of the above"),
