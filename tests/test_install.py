@@ -109,3 +109,30 @@ def test_repository_is_not_written(home: Path) -> None:
     before = sorted(p.name for p in (REPO_ROOT / "installer").iterdir())
     assert install("link").returncode == 0
     assert sorted(p.name for p in (REPO_ROOT / "installer").iterdir()) == before
+
+
+def test_help_lists_tools(home: Path) -> None:
+    result = install("--help")
+    assert "tools:" in result.stdout
+    assert "xonsh" in result.stdout
+
+
+def test_names_are_only_for_the_tools_command(home: Path) -> None:
+    assert install("link", "xonsh").returncode != 0
+    assert install("tools", "bogus").returncode != 0
+    assert snapshot(home) == []
+
+
+def test_dry_run_tools_changes_nothing(home: Path) -> None:
+    result = install("--dry-run", "tools", "xonsh", "fonts")
+    assert result.returncode == 0, result.stderr
+    assert "==> tools: xonsh" in result.stdout
+    assert snapshot(home) == []
+
+
+def test_dry_run_packages_changes_nothing(home: Path) -> None:
+    result = install("--dry-run", "packages")
+    # 対応していない環境で失敗しても、何も変えない
+    assert snapshot(home) == []
+    if result.returncode == 0:
+        assert "==> packages" in result.stdout

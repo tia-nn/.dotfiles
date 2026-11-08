@@ -8,7 +8,10 @@ from __future__ import annotations
 import os
 import shlex
 import shutil
+import subprocess
 import sys
+import urllib.request
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO
@@ -35,7 +38,7 @@ class Context:
     def warn(self, message: str) -> None:
         print(f"warning: {message}", file=self.err)
 
-    def _announce(self, *args: str | Path) -> bool:
+    def announce(self, *args: str | Path) -> bool:
         """操作を表示し、実際に実行してよければ True を返す"""
         line = shlex.join(str(arg) for arg in args)
         if self.dry_run:
@@ -49,20 +52,46 @@ class Context:
     def mkdir(self, path: Path) -> None:
         if path.is_dir():
             return
-        if self._announce("mkdir", "-p", path):
+        if self.announce("mkdir", "-p", path):
             path.mkdir(parents=True, exist_ok=True)
 
     def move(self, src: Path, dest: Path) -> None:
-        if self._announce("mv", src, dest):
+        if self.announce("mv", src, dest):
             os.rename(src, dest)
 
     def copy(self, src: Path, dest: Path) -> None:
-        if self._announce("cp", "-p", src, dest):
+        if self.announce("cp", "-p", src, dest):
             shutil.copy2(src, dest)
 
     def symlink(self, target: Path, link: Path) -> None:
-        if self._announce("ln", "-s", target, link):
+        if self.announce("ln", "-s", target, link):
             link.symlink_to(target)
+
+    def run(self, *args: str | Path, env: Mapping[str, str] | None = None) -> bool:
+        """外部コマンドを実行する。成功したら（dry-run なら常に）True。env は環境変数をまるごと指定する"""
+        if not self.announce(*args):
+            return True
+        try:
+            result = subprocess.run([str(arg) for arg in args], env=env, check=False)
+        except OSError as e:
+            self.warn(f"failed to run {args[0]}: {e}")
+            return False
+        if result.returncode != 0:
+            self.warn(f"command failed with exit code {result.returncode}: {shlex.join(map(str, args))}")
+            return False
+        return True
+
+    def download(self, url: str, dest: Path) -> None:
+        """url を dest に保存する。途中で失敗しても dest に中途半端なファイルを残さない"""
+        if not self.announce("curl", "-fsSL", "-o", dest, url):
+            return
+        tmp = dest.with_name(dest.name + ".part")
+        try:
+            with urllib.request.urlopen(url, timeout=60) as response, tmp.open("wb") as f:
+                shutil.copyfileobj(response, f)
+            os.replace(tmp, dest)
+        finally:
+            tmp.unlink(missing_ok=True)
 
     def write_text(self, path: Path, text: str) -> None:
         """path の中身を書き換える。path がリンクならリンク先を書き換え、リンクのまま保つ"""

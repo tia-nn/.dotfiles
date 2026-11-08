@@ -1,10 +1,5 @@
 .DS_Store
 
-/instant/xonsh
-/font
-
 /reconnect-drvctl.sh
-/venvs/
-/backup/
 
 __pycache__/

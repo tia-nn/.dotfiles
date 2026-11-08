@@ -10,6 +10,4 @@ from installer.links import Entry
 LINKS = [
     # xonsh は ~/.config/xonsh/rc.d の *.py を名前順に読む（~/.xonshrc は PC ごとの設定用に空けておく）
     Entry("shell/xonsh/rc.d", "~/.config/xonsh/rc.d"),
-    Entry("apps/hyper_linux.js", "~/.hyper.js", os="linux"),
-    Entry("apps/hyper_mac.js", "~/.hyper.js", os="mac"),
 ]

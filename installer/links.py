@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import importlib.util
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, get_args
 
 from .context import Context
+from .loader import load_module
 
 TargetOS = Literal["all", "linux", "mac", "windows"]
 """Entry の対象 OS"""
@@ -56,12 +56,7 @@ def expand_home(path: str, home: Path) -> Path:
 
 def load_entries(path: Path) -> list[Entry]:
     """links.py を読み込んで LINKS を返す"""
-    spec = importlib.util.spec_from_file_location("dotfiles_links", path)
-    if spec is None or spec.loader is None:
-        raise ValueError(f"cannot load {path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
+    module = load_module(path)
     entries = getattr(module, "LINKS", None)
     if not isinstance(entries, list) or not all(isinstance(e, Entry) for e in entries):
         raise ValueError(f"{path}: LINKS must be a list of Entry")
@@ -75,13 +70,14 @@ def resolve(entries: list[Entry], *, os_name: str, dotfiles: Path, home: Path) -
     ]
 
 
-def make_link(link: Link, ctx: Context) -> bool:
+def make_link(link: Link, ctx: Context, *, require_src: bool = True) -> bool:
     """link.dest を link.src へのシンボリックリンクにする。成功したら True を返す。
 
     すでに正しいリンクなら何もしない。別のファイルやリンクがあれば退避してから置き換える。
+    require_src=False なら、リンク元がまだなくてもリンクする（dry-run で、この後に作られるものなど）。
     """
     src, dest = link.src, link.dest
-    if not src.exists():
+    if require_src and not src.exists():
         ctx.warn(f"source not found: {src}")
         return False
     if dest.is_symlink() and Path(os.readlink(dest)) == src:

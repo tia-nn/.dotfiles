@@ -12,6 +12,8 @@ case $- in
     *) return 0 ;;
 esac
 
-if command -v pyenv >/dev/null 2>&1; then
-    eval "$(pyenv init - bash)"
+# asdf の補完
+if command -v asdf >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    . <(asdf completion bash)
 fi

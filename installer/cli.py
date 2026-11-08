@@ -13,7 +13,9 @@ from typing import Callable
 from .context import Context
 from .links import link_all, load_entries
 from .osinfo import detect_os
+from .packages import install_packages
 from .shellrc import setup_shells
+from .tools import TOOLS, install_tools
 
 DOTFILES = Path(__file__).resolve().parent.parent
 
@@ -32,41 +34,48 @@ def cmd_link(ctx: Context) -> bool:
     return links_ok and shells_ok
 
 
-def cmd_packages(ctx: Context) -> bool:
-    ctx.warn("packages: not implemented yet")
-    return False
+def cmd_packages(ctx: Context, names: list[str]) -> bool:
+    ctx.info("==> packages")
+    return install_packages(ctx)
 
 
-def cmd_tools(ctx: Context) -> bool:
-    ctx.warn("tools: not implemented yet")
-    return False
+def cmd_tools(ctx: Context, names: list[str]) -> bool:
+    return install_tools(names, ctx)
 
 
-def cmd_all(ctx: Context) -> bool:
-    return cmd_link(ctx) and cmd_packages(ctx) and cmd_tools(ctx)
+def cmd_all(ctx: Context, names: list[str]) -> bool:
+    # パッケージ（git や python3-venv）が入ってからツールを入れる
+    return cmd_link(ctx) and cmd_packages(ctx, []) and cmd_tools(ctx, [])
 
 
-COMMANDS: dict[str, tuple[Callable[[Context], bool], str]] = {
-    "link": (cmd_link, "Create symlinks listed in links.py and set up shell rc files (default)"),
-    "packages": (cmd_packages, "Install OS packages (not implemented yet)"),
-    "tools": (cmd_tools, "Install tools such as xonsh and fonts (not implemented yet)"),
-    "all": (cmd_all, "Run all of the above"),
+COMMANDS: dict[str, tuple[Callable[[Context, list[str]], bool], str]] = {
+    "link": (lambda ctx, names: cmd_link(ctx), "Create symlinks in links.py and set up shell rc (default)"),
+    "packages": (cmd_packages, "Install OS packages in packages.py (uses sudo on Linux)"),
+    "tools": (cmd_tools, "Install tools (all default tools, or only the given NAMEs)"),
+    "all": (cmd_all, "Run link, packages and tools"),
 }
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     commands_help = "\n".join(f"  {name:<10} {desc}" for name, (_, desc) in COMMANDS.items())
+    tools_help = "\n".join(
+        f"  {t.name:<10} {t.description}" for t in TOOLS.values()
+    )
     parser = argparse.ArgumentParser(
         prog="install.sh",
         description="Install dotfiles. Safe to run repeatedly; never asks questions.",
-        epilog=f"commands:\n{commands_help}",
+        epilog=f"commands:\n{commands_help}\n\ntools:\n{tools_help}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "-n", "--dry-run", action="store_true", help="show what would be done without changing anything"
     )
     parser.add_argument("command", nargs="?", default="link", choices=COMMANDS, metavar="COMMAND")
-    return parser.parse_args(argv)
+    parser.add_argument("names", nargs="*", metavar="NAME", help="tool names (only for the tools command)")
+    args = parser.parse_args(argv)
+    if args.names and args.command != "tools":
+        parser.error(f"{args.command} does not take NAME arguments")
+    return args
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -92,4 +101,4 @@ def main(argv: list[str] | None = None) -> int:
     if ctx.dry_run:
         ctx.info("(dry-run: nothing will be changed)")
     func, _ = COMMANDS[args.command]
-    return 0 if func(ctx) else 1
+    return 0 if func(ctx, args.names) else 1

@@ -31,30 +31,40 @@ _dotfiles_path_prepend() {
 # --- 自分で入れたコマンド ---
 _dotfiles_path_prepend "$HOME/.local/bin"
 
-# --- pyenv（pyenv init は各シェルの rc で行う）---
-if [ -d "$HOME/.pyenv" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    _dotfiles_path_prepend "$PYENV_ROOT/bin"
-    _dotfiles_path_prepend "$PYENV_ROOT/shims"
+# --- asdf（Python などのバージョン管理。asdf 本体は ~/.local/bin、各ツールは shims から呼ぶ）---
+# https://asdf-vm.com/guide/getting-started.html
+_dotfiles_path_prepend "${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
+
+# --- Neko のライブラリ（haxelib が使う）---
+# TODO: 暫定の対応。asdf の Neko（~/.tool-versions のバージョン）の場所を LD_LIBRARY_PATH に入れる。
+#   - Linux 版の haxelib は libneko.so.2 を探す場所（RUNPATH）を持っていないので、このままでは起動しない。
+#   - asdf-haxe の対策（asdf cmd haxe neko dylibs link）は asdf v0.20 では呼べず、
+#     スクリプトを直接実行してリンクを作っても Linux では効かない。
+#   - OS の neko パッケージでは libneko は見つかるが、std.ndll が見つからずに失敗する。
+#   asdf-haxe 側で直ったら消す。mac（@rpath/libneko.2.dylib）では未確認。
+#   https://github.com/asdf-community/asdf-haxe#troubleshooting
+if [ -f "$HOME/${ASDF_DEFAULT_TOOL_VERSIONS_FILENAME:-.tool-versions}" ]; then
+    while read -r _dotfiles_tool _dotfiles_version _dotfiles_rest || [ -n "${_dotfiles_tool:-}" ]; do
+        [ "${_dotfiles_tool:-}" = neko ] || continue
+        _dotfiles_neko="${ASDF_DATA_DIR:-$HOME/.asdf}/installs/neko/${_dotfiles_version:-}/bin"
+        if [ -d "$_dotfiles_neko" ]; then
+            case ":${LD_LIBRARY_PATH:-}:" in
+                *":$_dotfiles_neko:"*) ;;
+                *) export LD_LIBRARY_PATH="$_dotfiles_neko${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+            esac
+        fi
+        break
+    done <"$HOME/${ASDF_DEFAULT_TOOL_VERSIONS_FILENAME:-.tool-versions}"
+    unset _dotfiles_tool _dotfiles_version _dotfiles_rest _dotfiles_neko
 fi
 
-# --- Haxe ---
-if [ -d "$HOME/.haxe-versions/default" ]; then
-    export HAXE_PATH="$HOME/.haxe-versions/default"
-    _dotfiles_path_prepend "$HAXE_PATH"
-fi
+# --- HashLink（asdf のプラグインがないので手で ~/.haxe-versions/hashlink に置く）---
 _dotfiles_path_prepend "$HOME/.haxe-versions/hashlink"
 
-# --- npm（npm config -g set prefix=$HOME/.npm）---
+# --- npm（グローバルインストール先。install.sh tools npm が prefix を ~/.npm にする）---
 if [ -d "$HOME/.npm" ]; then
     export NPM_BIN="$HOME/.npm/bin"
     _dotfiles_path_prepend "$NPM_BIN"
-fi
-
-# --- n（Node.js のバージョン管理）---
-if [ -d "$HOME/.local/apps/n" ]; then
-    export N_PREFIX="$HOME/.local/apps/n"
-    _dotfiles_path_prepend "$N_PREFIX/bin"
 fi
 
 # --- Intel FPGA（Quartus / Questa）---
