@@ -173,7 +173,7 @@ def test_dry_run_packages_changes_nothing(home: Path) -> None:
         ({"link": True, "packages": True, "tools": True}, ["link", "packages", "tools"], True),
         # link はほかと独立しているので、失敗しても packages と tools は実行する
         ({"link": False, "packages": True, "tools": True}, ["link", "packages", "tools"], False),
-        # tools は packages（git や python3-venv）に依存する
+        # tools は packages（git や Python のビルドに必要なもの）に依存する
         ({"link": True, "packages": False, "tools": True}, ["link", "packages"], False),
     ],
 )

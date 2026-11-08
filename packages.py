@@ -10,8 +10,6 @@
 APT = [
     # 基本
     "curl", "git", "unzip", "zsh", "fontconfig",
-    # xonsh の venv を作る
-    "python3-venv",
     # asdf-nodejs が使う（https://asdf-vm.com/guide/getting-started.html）
     "dirmngr", "gpg", "gawk",
     # asdf で Python をビルドする

@@ -36,7 +36,7 @@ cd ~/.dotfiles
 |---|---|
 | `git` | `git config --global` の設定（ユーザー名など） |
 | `asdf` | [asdf](https://asdf-vm.com/) を `~/.local/bin` に入れ、Python・Node.js・Haxe・Neko を入れて既定のバージョンにする |
-| `xonsh` | xonsh と xontrib（abbrevs・vox）を専用の venv に入れ、`~/.local/bin/xonsh` にリンクする。足りないものだけを入れる |
+| `xonsh` | xonsh と xontrib（abbrevs・vox）を、asdf の Python（`~/.tool-versions`）で作った専用の venv に入れ、`~/.local/bin/xonsh` にリンクする。足りないものだけを入れる |
 | `npm` | npm のグローバルインストール先を `${XDG_DATA_HOME:-~/.local/share}/npm` にする（sudo なしで `npm install -g` できる） |
 | `fonts` | 源ノ角ゴシック Code と Nerd Fonts Symbols を入れる |
 

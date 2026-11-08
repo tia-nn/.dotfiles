@@ -46,7 +46,7 @@ def cmd_tools(ctx: Context, names: list[str]) -> bool:
 def cmd_all(ctx: Context, names: list[str]) -> bool:
     # link はほかと独立しているので、失敗しても続ける
     link_ok = cmd_link(ctx)
-    # パッケージ（git や python3-venv）が入ってからツールを入れる
+    # パッケージ（git や asdf で Python をビルドするもの）が入ってからツールを入れる
     install_ok = cmd_packages(ctx, []) and cmd_tools(ctx, [])
     return link_ok and install_ok
 
