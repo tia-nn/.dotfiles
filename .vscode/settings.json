@@ -1,19 +1,12 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.defaultFormatter": "charliermarsh.ruff",
     },
     "[xonsh]": {
         "editor.formatOnSave": false,
     },
-    "python.formatting.provider": "none",
     "cSpell.words": [
         "dotfiles",
-        "jetbrains",
-        "Keymap",
-        "liveshare",
-        "Menlo",
-        "Nanami",
-        "pwsh",
         "xonshrc",
         "Xontrib"
     ],
