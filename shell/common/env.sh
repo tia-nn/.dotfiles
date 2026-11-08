@@ -36,7 +36,7 @@ _dotfiles_path_prepend "$HOME/.local/bin"
 _dotfiles_path_prepend "${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
 
 # --- Neko のライブラリ（haxelib が使う）---
-# TODO: 暫定の対応。asdf の Neko（~/.tool-versions のバージョン）の場所を LD_LIBRARY_PATH に入れる。
+# TODO(#1): 暫定の対応。asdf の Neko（~/.tool-versions のバージョン）の場所を LD_LIBRARY_PATH に入れる。
 #   - Linux 版の haxelib は libneko.so.2 を探す場所（RUNPATH）を持っていないので、このままでは起動しない。
 #   - asdf-haxe の対策（asdf cmd haxe neko dylibs link）は asdf v0.20 では呼べず、
 #     スクリプトを直接実行してリンクを作っても Linux では効かない。

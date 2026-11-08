@@ -139,4 +139,4 @@ docker run --rm -u root -v "$PWD:/dotfiles:ro" dotfiles-debian sh -c 'HOME=$(mkt
 
 ## 既知の問題
 
-- **haxelib が libneko を見つけられない**: 暫定で `shell/common/env.sh` が asdf の Neko の場所を `LD_LIBRARY_PATH` に入れている。詳しくはそのファイルの TODO を参照。mac では未確認。
+- **haxelib が libneko を見つけられない**（[#1](https://github.com/tia-nn/.dotfiles/issues/1)）: 暫定で `shell/common/env.sh` が asdf の Neko の場所を `LD_LIBRARY_PATH` に入れている。mac では未確認。
