@@ -6,8 +6,11 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 from helpers import REPO_ROOT, snapshot
 
+from installer import cli
+from installer.context import Context
 from installer.links import load_entries, resolve
 from installer.osinfo import detect_os
 
@@ -136,3 +139,35 @@ def test_dry_run_packages_changes_nothing(home: Path) -> None:
     assert snapshot(home) == []
     if result.returncode == 0:
         assert "==> packages" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("results", "expected_calls", "expected"),
+    [
+        ({"link": True, "packages": True, "tools": True}, ["link", "packages", "tools"], True),
+        # link はほかと独立しているので、失敗しても packages と tools は実行する
+        ({"link": False, "packages": True, "tools": True}, ["link", "packages", "tools"], False),
+        # tools は packages（git や python3-venv）に依存する
+        ({"link": True, "packages": False, "tools": True}, ["link", "packages"], False),
+    ],
+)
+def test_all_runs_packages_and_tools_even_if_link_fails(
+    ctx: Context,
+    monkeypatch: pytest.MonkeyPatch,
+    results: dict[str, bool],
+    expected_calls: list[str],
+    expected: bool,
+) -> None:
+    called: list[str] = []
+
+    def fake(name: str) -> object:
+        def run(*args: object) -> bool:
+            called.append(name)
+            return results[name]
+
+        return run
+
+    for name in results:
+        monkeypatch.setattr(cli, f"cmd_{name}", fake(name))
+    assert cli.cmd_all(ctx, []) is expected
+    assert called == expected_calls
