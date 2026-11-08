@@ -151,7 +151,12 @@ def install_binary(ctx: Context, dest: Path) -> bool:
         ctx.announce("download", f"latest {REPO} release (*{suffix})", "->", dest)
         return True
 
-    release = latest_release(REPO)
+    try:
+        release = latest_release(REPO)
+    except (OSError, ValueError) as e:
+        # ValueError: API がエラーページなど JSON でないものを返したとき
+        ctx.warn(f"asdf: cannot get the latest {REPO} release: {e}")
+        return False
     asset = find_asset(release, suffix)
     if asset is None:
         ctx.warn(f"asdf {release.get('tag_name')}: no asset *{suffix}")

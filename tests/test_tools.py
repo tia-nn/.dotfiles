@@ -231,6 +231,21 @@ def test_asdf_installs_everything_on_a_new_machine(
 
 
 @pytest.mark.usefixtures("no_commands")
+@pytest.mark.parametrize("error", [OSError("offline"), ValueError("Expecting value")])
+def test_asdf_warns_when_the_release_cannot_be_fetched(
+    ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    def broken(repo: str) -> dict[str, Any]:
+        raise error
+
+    monkeypatch.setattr(asdf, "latest_release", broken)
+    monkeypatch.setattr(platform, "machine", lambda: "x86_64")
+    assert not asdf.install(ctx)
+    assert "cannot get the latest" in errors(ctx)
+    assert not (home / ".local/bin/asdf").exists()
+
+
+@pytest.mark.usefixtures("no_commands")
 def test_asdf_keeps_existing_global_versions(
     ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
