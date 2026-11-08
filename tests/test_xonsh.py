@@ -177,3 +177,40 @@ print('@@', $XONSH_INTERACTIVE, 'loadenv' in aliases, sep='|')
 
     # 対話シェル専用の xontrib（envstack の loadenv など）は読まれていない
     assert lines[3] == ["False", "False"]
+
+
+def test_interactive_xontribs_can_be_reloaded_and_unloaded(xonsh: str, home: Path) -> None:
+    """対話シェル（xonsh -i）では対話用の xontrib も読み、dotfiles-reload と unload ができる。
+
+    テスト用の環境には xontrib-abbrevs・xontrib-vox を入れていないので、それらは入っていないという案内が出る。
+    """
+    (home / ".local" / "bin").mkdir(parents=True)
+    result = subprocess.run(["sh", str(INSTALL), "link"], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
+
+    script = """
+from xonsh.xontribs import xontribs_unload
+def state():
+    return $RIGHT_PROMPT, 'loadenv' in aliases, 'dotfiles-reload' in aliases
+print('@@', *state(), sep='|')
+dotfiles-reload
+print('@@', *state(), sep='|')
+xontribs_unload(['dotfiles.prompt', 'dotfiles.envstack', 'dotfiles.aliases'])
+print('@@', *state(), sep='|')
+"""
+    result = subprocess.run(
+        [xonsh, "-i", "--shell-type=readline", "-c", script],
+        env={"HOME": str(home), "PATH": "/usr/bin:/bin"},
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    lines = [line.split("|")[1:] for line in result.stdout.splitlines() if line.startswith("@@|")]
+    loaded = ["{curr_branch} {env_name}", "True", "True"]
+    assert lines == [loaded, loaded, ["", "False", "False"]], result.stdout + result.stderr
+
+    # 入っていない xontrib の案内は出てよいが、読み込みの失敗はない
+    assert "Traceback" not in result.stderr
+    assert "Failed to load" not in result.stderr
