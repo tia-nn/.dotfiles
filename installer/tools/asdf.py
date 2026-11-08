@@ -2,6 +2,7 @@
 
 1. asdf 本体を ~/.local/bin/asdf に置く。v0.16 以降は1つのバイナリなので、GitHub のリリースから
    OS と CPU に合うものを置くだけでよい。すでにあれば入れ直さない。
+   ただし PATH にある asdf が v0.16 より前（bash で書かれた版）なら、警告を出して止める。
 2. packages.py の ASDF_PLUGINS のプラグインを追加する。
 3. packages.py の ASDF_GLOBAL のバージョンを入れて、全体の既定（~/.tool-versions）にする。
    すでに ~/.tool-versions にあるものは変えない。
@@ -30,6 +31,8 @@ from ..loader import get_str_dict, get_str_list, load_module
 
 REPO = "asdf-vm/asdf"
 OS_NAMES = {"linux": "linux", "mac": "darwin"}
+MIN_VERSION = (0, 16)
+"""asdf set -u などを使うので、これより前の asdf では動かない"""
 ARCH_NAMES = {"x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm64"}
 
 
@@ -76,6 +79,23 @@ def installed_plugins(asdf: Path, env: dict[str, str]) -> set[str]:
     if result.returncode != 0:
         return set()
     return {line.split()[0] for line in result.stdout.splitlines() if line.strip()}
+
+
+def asdf_version(asdf: Path, env: dict[str, str]) -> tuple[int, int] | None:
+    """asdf --version の (メジャー, マイナー)。分からなければ None
+
+    出力は v0.16 以降が "asdf version 0.16.7 (revision ...)"、それより前が "v0.14.0-ccdd47d"。
+    """
+    try:
+        result = subprocess.run(
+            [str(asdf), "--version"], capture_output=True, text=True, env=env, check=False
+        )
+    except OSError:
+        return None
+    match = re.search(r"(\d+)\.(\d+)\.\d+", result.stdout)
+    if result.returncode != 0 or match is None:
+        return None
+    return int(match[1]), int(match[2])
 
 
 class ResolveError(Exception):
@@ -180,6 +200,14 @@ def install(ctx: Context) -> bool:
     found = shutil.which("asdf")
     if binary.exists() or found:
         asdf = binary if binary.exists() else Path(str(found))
+        found_version = asdf_version(asdf, command_env(ctx))
+        if found_version is None or found_version < MIN_VERSION:
+            shown = "unknown version" if found_version is None else "v{}.{}".format(*found_version)
+            ctx.warn(
+                f"asdf: {asdf} is {shown}, but v{MIN_VERSION[0]}.{MIN_VERSION[1]} or later is required. "
+                "Remove or upgrade it (https://asdf-vm.com/guide/upgrading-to-v0-16.html)"
+            )
+            return False
         ctx.info(f"ok: {asdf}")
     else:
         if not install_binary(ctx, binary):

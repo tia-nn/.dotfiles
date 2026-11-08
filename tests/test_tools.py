@@ -39,6 +39,10 @@ def record_runs(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> list[list[str]
     return runs
 
 
+# 偽の asdf が --version に答える部分
+ASDF_VERSION = '[ "$1" = --version ] && { echo "asdf version 0.20.2 (revision 1a2b3c4)"; exit 0; }\n'
+
+
 def write_script(path: Path, body: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("#!/bin/sh\n" + body)
@@ -245,11 +249,43 @@ def test_asdf_warns_when_the_release_cannot_be_fetched(
     assert not (home / ".local/bin/asdf").exists()
 
 
+@pytest.mark.parametrize(
+    ("stdout", "expected"),
+    [
+        ("asdf version 0.16.7 (revision 0f8d5e3)", (0, 16)),
+        ("asdf version v0.20.2", (0, 20)),
+        ("v0.14.0-ccdd47d", (0, 14)),
+        ("", None),
+    ],
+)
+def test_asdf_version(tmp_path: Path, stdout: str, expected: tuple[int, int] | None) -> None:
+    script = tmp_path / "asdf"
+    write_script(script, f'echo "{stdout}"\n')
+    assert asdf.asdf_version(script, {"PATH": "/usr/bin:/bin"}) == expected
+
+
+@pytest.mark.parametrize(
+    ("body", "shown"),
+    [("echo v0.14.0-ccdd47d\n", "v0.14"), ("exit 1\n", "unknown version")],
+)
+def test_asdf_stops_with_an_old_asdf_in_path(
+    ctx: Context, home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str, shown: str
+) -> None:
+    old = tmp_path / "old" / "asdf"
+    write_script(old, body)
+    monkeypatch.setattr(shutil, "which", lambda name, **kwargs: str(old) if name == "asdf" else None)
+    runs = record_runs(ctx, monkeypatch)
+    assert not asdf.install(ctx)
+    assert f"asdf: {old} is {shown}, but v0.16 or later is required" in errors(ctx)
+    assert runs == []
+    assert not (home / ".local/bin/asdf").exists()
+
+
 @pytest.mark.usefixtures("no_commands")
 def test_asdf_keeps_existing_global_versions(
     ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    write_script(home / ".local/bin/asdf", "")
+    write_script(home / ".local/bin/asdf", ASDF_VERSION)
     (home / ".tool-versions").write_text("nodejs 20.0.0\nhaxe 4.3.6\n")
     monkeypatch.setattr(asdf, "latest_release", lambda repo: pytest.fail("should not download"))
     monkeypatch.setattr(asdf, "installed_plugins", lambda path, env: {"python", "nodejs", "haxe", "neko"})
@@ -273,7 +309,10 @@ def test_asdf_fails_when_a_version_cannot_be_resolved(
     ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(asdf, "installed_plugins", lambda path, env: {"python", "nodejs", "haxe", "neko"})
-    write_script(home / ".local/bin/asdf", 'echo "curl: command not found" >&2; exit 1\n')
+    write_script(
+        home / ".local/bin/asdf",
+        ASDF_VERSION + 'echo "curl: command not found" >&2; exit 1\n',
+    )
 
     def offline() -> list[dict[str, Any]]:
         raise OSError("network is unreachable")
