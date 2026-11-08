@@ -361,18 +361,48 @@ def test_xonsh_creates_a_venv_and_links_it(ctx: Context, home: Path) -> None:
     venv = home / ".local/share/dotfiles/venvs/xonsh"
     out = output(ctx)
     assert f"-m venv {venv}" in out
-    assert f"{venv}/bin/python -m pip install 'xonsh[full]'" in out
+    assert f"{venv}/bin/python -m pip install --upgrade pip" in out
+    assert f"{venv}/bin/python -m pip install 'xonsh[full]' xontrib-abbrevs xontrib-vox" in out
     assert f"[dry-run] ln -s {venv}/bin/xonsh {home}/.local/bin/xonsh" in out
     assert snapshot(home) == []
 
 
-def test_xonsh_only_links_when_already_installed(ctx: Context, home: Path) -> None:
-    xonsh_bin = home / ".local/share/dotfiles/venvs/xonsh/bin/xonsh"
-    xonsh_bin.parent.mkdir(parents=True)
-    xonsh_bin.touch()
+def _fake_venv(home: Path, *files: str) -> Path:
+    """venv の代わり。files に挙げたファイルだけがある"""
+    venv = home / ".local/share/dotfiles/venvs/xonsh"
+    for name in ("bin/python", *files):
+        (venv / name).parent.mkdir(parents=True, exist_ok=True)
+        (venv / name).touch()
+    return venv
+
+
+SITE = "lib/python3.12/site-packages"
+
+
+def test_xonsh_only_links_when_everything_is_installed(ctx: Context, home: Path) -> None:
+    venv = _fake_venv(home, "bin/xonsh", f"{SITE}/xontrib/abbrevs.py", f"{SITE}/xontrib/vox.py")
     assert xonsh.install(ctx)
-    assert os.readlink(home / ".local/bin/xonsh") == str(xonsh_bin)
+    assert os.readlink(home / ".local/bin/xonsh") == str(venv / "bin/xonsh")
     assert "pip" not in output(ctx)
+
+
+def test_xonsh_installs_only_missing_xontribs_into_an_existing_venv(ctx: Context, home: Path) -> None:
+    """xontrib を入れるようにする前に作った venv にも、足りないものだけを足す"""
+    venv = _fake_venv(home, "bin/xonsh", f"{SITE}/xontrib/vox.py")
+    ctx.dry_run = True
+    assert xonsh.install(ctx)
+    out = output(ctx)
+    assert f"[dry-run] {venv}/bin/python -m pip install xontrib-abbrevs\n" in out
+    assert "-m venv" not in out
+    assert "--upgrade pip" not in out
+
+
+def test_xonsh_packages_match_the_xontribs_loaded_by_the_rc() -> None:
+    from xontrib.dotfiles import EXTERNAL
+
+    assert sorted(p for p in xonsh.PACKAGES if p.startswith("xontrib-")) == sorted(
+        f"xontrib-{name}" for name in EXTERNAL
+    )
 
 
 def test_xonsh_venv_follows_xdg_data_home(

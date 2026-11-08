@@ -31,7 +31,7 @@ _ENV: dict[str, Any] = {
     "XONSH_AUTOPAIR": True,
     "XONSH_CTRL_BKSP_DELETION": True,
     # 履歴
-    "HISTCONTROL": "ignoredups,erasedups",
+    "HISTCONTROL": "ignoredups",
     "XONSH_HISTORY_BACKEND": "sqlite",
     "XONSH_HISTORY_MATCH_ANYWHERE": True,
     # 補完
