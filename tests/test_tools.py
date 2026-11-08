@@ -5,6 +5,7 @@ import os
 import platform
 import shutil
 import tarfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -447,6 +448,33 @@ def test_fonts_downloads_missing_fonts(ctx: Context, home: Path) -> None:
     assert f"[dry-run] curl -fsSL -o {font_dir}/SourceHanCodeJP.ttc {fonts.SOURCE_HAN_CODE_JP}" in out
     assert "[dry-run] unzip NerdFontsSymbolsOnly.zip" in out
     assert snapshot(home) == []
+
+
+@pytest.mark.usefixtures("no_commands")
+def test_fonts_takes_nerd_fonts_from_the_latest_release(
+    ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    downloaded: list[str] = []
+
+    def fake_download(url: str, dest: Path) -> None:
+        downloaded.append(url)
+        if dest.suffix == ".zip":
+            with zipfile.ZipFile(dest, "w") as zf:
+                zf.writestr("SymbolsNerdFontMono-Regular.ttf", b"font")
+                zf.writestr("README.md", b"readme")
+        else:
+            dest.write_bytes(b"ttc")
+
+    monkeypatch.setattr(ctx, "download", fake_download)
+    assert fonts.install(ctx)
+    assert downloaded[1] == (
+        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip"
+    )
+    font_dir = home / ".local/share/fonts/dotfiles"
+    assert sorted(p.name for p in font_dir.iterdir()) == [
+        "SourceHanCodeJP.ttc",
+        "SymbolsNerdFontMono-Regular.ttf",
+    ]
 
 
 @pytest.mark.usefixtures("all_commands")

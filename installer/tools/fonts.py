@@ -1,7 +1,7 @@
 """フォントを入れる。
 
 - 源ノ角ゴシック Code（Source Han Code JP）: https://github.com/adobe-fonts/source-han-code-jp
-- Nerd Fonts Symbols Only: https://github.com/ryanoasis/nerd-fonts （アイコン用）
+- Nerd Fonts Symbols Only: https://github.com/ryanoasis/nerd-fonts （アイコン用。最新のリリースから取る）
 
 置き場所は Linux が ${XDG_DATA_HOME:-~/.local/share}/fonts/dotfiles、mac が ~/Library/Fonts。
 すでにあるものはダウンロードしない。
@@ -20,8 +20,9 @@ from ..context import Context
 SOURCE_HAN_CODE_JP = (
     "https://github.com/adobe-fonts/source-han-code-jp/releases/download/2.012R/SourceHanCodeJP.ttc"
 )
+# releases/latest/download/ は最新のリリースのアセットに転送される（API を使わないので回数制限もない）
 NERD_FONTS_SYMBOLS = (
-    "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.1/NerdFontsSymbolsOnly.zip"
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip"
 )
 
 
