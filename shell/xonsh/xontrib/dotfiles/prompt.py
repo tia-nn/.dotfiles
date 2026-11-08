@@ -33,7 +33,6 @@ _ENV: dict[str, Any] = {
     "XONSH_HISTORY_BACKEND": "sqlite",
     "XONSH_HISTORY_MATCH_ANYWHERE": True,
     # 補完
-    "CASE_SENSITIVE_COMPLETIONS": False,
     "COMPLETIONS_CONFIRM": False,
 }
 
@@ -48,7 +47,7 @@ def _load_xontrib_(xsh: XonshSession, **_: Any) -> None:
     env = xsh.env
     for name, value in _ENV.items():
         _changes.set(env, name, value)
-    _changes.set(env, "BASH_COMPLETIONS", str(xonsh_dir() / "bash_completions.bash"))
+    _changes.set(env, "BASH_COMPLETIONS", str(xonsh_dir(env.detype()) / "bash_completions.bash"))
     for name, value in _PROMPT_FIELDS.items():
         _changes.set(env["PROMPT_FIELDS"], name, value)
 

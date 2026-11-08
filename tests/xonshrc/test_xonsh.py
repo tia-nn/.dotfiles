@@ -12,7 +12,7 @@ from helpers import REPO_ROOT
 from installer.tools import xonsh as xonsh_tool
 from xontrib.dotfiles import EXTERNAL, xontrib_names
 from xontrib.dotfiles._changes import Changes
-from xontrib.dotfiles._git import current_branch, default_branch
+from xontrib.dotfiles._git import current_branch, default_branch, merged_branches
 from xontrib.dotfiles._paths import dotfiles_dir, state_dir, xonsh_dir
 
 XONSH_DIR = REPO_ROOT / "shell" / "xonsh"
@@ -50,66 +50,98 @@ def test_every_file_is_valid_python(path: Path) -> None:
 # --- xontrib/dotfiles/_paths.py ---
 
 
-def test_paths_use_dotfiles_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("DOTFILES", str(tmp_path))
-    assert dotfiles_dir() == tmp_path
-    assert xonsh_dir() == tmp_path / "shell" / "xonsh"
+def test_paths_use_dotfiles_env(tmp_path: Path) -> None:
+    env = {"DOTFILES": str(tmp_path)}
+    assert dotfiles_dir(env) == tmp_path
+    assert xonsh_dir(env) == tmp_path / "shell" / "xonsh"
 
 
-def test_paths_fall_back_to_the_repository(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DOTFILES", raising=False)
-    assert dotfiles_dir() == REPO_ROOT
+def test_paths_fall_back_to_the_repository() -> None:
+    assert dotfiles_dir({}) == REPO_ROOT
 
 
-def test_state_dir(monkeypatch: pytest.MonkeyPatch, home: Path, tmp_path: Path) -> None:
-    assert state_dir() == home / ".local" / "state" / "xonsh"
-    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "state"))
-    assert state_dir() == tmp_path / "state" / "xonsh"
+def test_state_dir(home: Path, tmp_path: Path) -> None:
+    assert state_dir({"HOME": str(tmp_path)}) == tmp_path / ".local" / "state" / "xonsh"
+    assert state_dir({}) == home / ".local" / "state" / "xonsh"
+    assert state_dir({"XDG_STATE_HOME": str(tmp_path / "state")}) == tmp_path / "state" / "xonsh"
 
 
 # --- xontrib/dotfiles/_git.py ---
 
 
 @pytest.fixture
-def git_repo(tmp_path: Path, home: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+def env(home: Path) -> dict[str, str]:
+    """git に渡す環境変数（xonsh の env の代わり）。ほかの git の設定を読まない"""
     if shutil.which("git") is None:
         pytest.skip("git is not installed")
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(home / ".gitconfig"))
-    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-    monkeypatch.delenv("GIT_DEFAULTBRANCH", raising=False)
+    return {
+        "HOME": str(home),
+        "PATH": os.environ["PATH"],
+        "GIT_CONFIG_GLOBAL": str(home / ".gitconfig"),
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
+
+
+def run_git(repo: Path, *args: str) -> None:
+    identity = ["-c", "user.name=t", "-c", "user.email=t@example.com"]
+    subprocess.run(["git", *identity, *args], cwd=repo, check=True, capture_output=True)
+
+
+@pytest.fixture
+def git_repo(tmp_path: Path, env: dict[str, str], monkeypatch: pytest.MonkeyPatch) -> Path:
     repo = tmp_path / "repo"
     subprocess.run(["git", "init", "-q", "-b", "topic", str(repo)], check=True)
-    identity = ["-c", "user.name=t", "-c", "user.email=t@example.com"]
-    subprocess.run(["git", *identity, "commit", "-q", "--allow-empty", "-m", "x"], cwd=repo, check=True)
+    run_git(repo, "commit", "-q", "--allow-empty", "-m", "x")
     monkeypatch.chdir(repo)
     return repo
 
 
 @pytest.mark.usefixtures("git_repo")
-def test_default_branch(monkeypatch: pytest.MonkeyPatch, home: Path) -> None:
-    assert default_branch() is None
+def test_default_branch(env: dict[str, str], home: Path) -> None:
+    assert default_branch(env) is None
     (home / ".gitconfig").write_text("[init]\n\tdefaultBranch = trunk\n")
-    assert default_branch() == "trunk"
-    monkeypatch.setenv("GIT_DEFAULTBRANCH", "main")
-    assert default_branch() == "main"
+    assert default_branch(env) == "trunk"
+    assert default_branch({**env, "GIT_DEFAULTBRANCH": "main"}) == "main"
 
 
 @pytest.mark.usefixtures("git_repo")
-def test_current_branch() -> None:
-    assert current_branch() == "topic"
+def test_current_branch(env: dict[str, str]) -> None:
+    assert current_branch(env) == "topic"
 
 
-def test_current_branch_outside_a_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+def test_current_branch_outside_a_repository(
+    env: dict[str, str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.chdir(tmp_path)
-    assert current_branch() is None
+    assert current_branch({**env, "GIT_CEILING_DIRECTORIES": str(tmp_path)}) is None
 
 
-def test_git_helpers_without_git(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("PATH", str(tmp_path))
-    monkeypatch.delenv("GIT_DEFAULTBRANCH", raising=False)
-    assert current_branch() is None
-    assert default_branch() is None
+def test_git_helpers_use_the_path_in_env(tmp_path: Path) -> None:
+    """os.environ ではなく、渡した env の PATH で git を探す"""
+    env = {"PATH": str(tmp_path)}
+    assert current_branch(env) is None
+    assert default_branch(env) is None
+
+
+def test_merged_branches_skip_protected_and_checked_out_branches(
+    git_repo: Path, env: dict[str, str], tmp_path: Path
+) -> None:
+    for branch in ("main", "release/1.0", "maintenance", "feature/domain", "in-worktree"):
+        run_git(git_repo, "branch", branch)
+    run_git(git_repo, "switch", "-q", "-c", "unmerged")
+    run_git(git_repo, "commit", "-q", "--allow-empty", "-m", "y")
+    run_git(git_repo, "switch", "-q", "topic")
+    run_git(git_repo, "worktree", "add", "-q", str(tmp_path / "wt"), "in-worktree")
+    # 今のブランチ（topic）・守るブランチ・ほかの worktree のブランチ・マージしていないブランチは消さない。
+    # 名前の一部に main などを含むだけのブランチは消す
+    assert merged_branches(env) == ["feature/domain", "maintenance"]
+
+
+def test_merged_branches_outside_a_repository(
+    env: dict[str, str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    assert merged_branches({**env, "GIT_CEILING_DIRECTORIES": str(tmp_path)}) is None
 
 
 # --- xontrib/dotfiles/_changes.py ---
@@ -187,14 +219,17 @@ print('@@', $XONSH_INTERACTIVE, 'loadenv' in aliases, sep='|')
 def test_interactive_xontribs_can_be_reloaded_and_unloaded(xonsh: str, home: Path) -> None:
     """対話シェル（xonsh -i）では対話用の xontrib も読み、dotfiles-reload と unload ができる。
 
-    テスト用の環境には xontrib-abbrevs・xontrib-vox を入れていないので、それらは入っていないという案内が出る。
+    PC ごとの設定（rc.d/90_local.xsh）は dotfiles の後に読まれ、xonsh で設定した変数を abbrevs が使う。
     """
     (home / ".local" / "bin").mkdir(parents=True)
     result = subprocess.run(["sh", str(INSTALL), "link"], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
+    (home / ".config/xonsh/rc.d/90_local.xsh").write_text("$GIT_DEFAULTBRANCH = 'trunk'\n")
 
     script = """
+from types import SimpleNamespace
 from xonsh.xontribs import xontribs_unload
+print('@@', abbrevs['grstrm']('grstrm', SimpleNamespace(text='grstrm')), 'vox' in aliases, sep='|')
 def state():
     return $RIGHT_PROMPT, 'loadenv' in aliases, 'dotfiles-reload' in aliases
 print('@@', *state(), sep='|')
@@ -214,8 +249,11 @@ print('@@', *state(), sep='|')
     assert result.returncode == 0, result.stdout + result.stderr
     lines = [line.split("|")[1:] for line in result.stdout.splitlines() if line.startswith("@@|")]
     loaded = ["{curr_branch} {env_name}", "True", "True"]
-    assert lines == [loaded, loaded, ["", "False", "False"]], result.stdout + result.stderr
-
-    # 入っていない xontrib の案内は出てよいが、読み込みの失敗はない
-    assert "Traceback" not in result.stderr
-    assert "Failed to load" not in result.stderr
+    assert lines == [
+        ["git restore --source=trunk", "True"],
+        loaded,
+        loaded,
+        ["", "False", "False"],
+    ], result.stdout + result.stderr
+    # 外部の xontrib も入っているので、案内も警告も出ない
+    assert result.stderr == ""

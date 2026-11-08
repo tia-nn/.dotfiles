@@ -79,6 +79,19 @@ def test_loading_twice_then_unloading_restores_everything(name: str, xsh: FakeSe
     assert xsh.state() == before
 
 
+@pytest.mark.parametrize("name", ["dotfiles.env", "dotfiles.prompt"])
+def test_only_current_xonsh_variables_are_set(name: str, xsh: FakeSession) -> None:
+    """xonsh で廃止・非推奨になった変数を設定していない（設定しても何も起きず、警告も出ないことがある）"""
+    from xonsh.environ import DEFAULT_VARS
+
+    before = set(xsh.env)
+    load(name)._load_xontrib_(xsh)
+    ours = {"DOTFILES", "shell_type"}
+    for var in sorted(set(xsh.env) - before - ours):
+        assert var in DEFAULT_VARS, f"${var} is not a xonsh variable"
+        assert not DEFAULT_VARS[var].deprecated, f"${var} is deprecated"
+
+
 # --- env ---
 
 
@@ -138,6 +151,14 @@ def test_abbrevs_does_nothing_without_xontrib_abbrevs(home: Path) -> None:
     before = xsh.state()
     load("dotfiles.abbrevs")._load_xontrib_(xsh)
     assert xsh.state() == before
+
+
+def test_abbrevs_use_git_defaultbranch_set_in_xonsh(xsh: FakeSession) -> None:
+    """xonsh は os.environ を更新しないので、xonsh で設定した $GIT_DEFAULTBRANCH を見る"""
+    xsh.env["GIT_DEFAULTBRANCH"] = "trunk"
+    load("dotfiles.abbrevs")._load_xontrib_(xsh)
+    abbrevs: dict[str, Abbrev] = xsh.builtins.abbrevs
+    assert expand(abbrevs["grstrm"], "grstrm", "grstrm") == "git restore --source=trunk"
 
 
 def fake_command(directory: Path, name: str) -> None:

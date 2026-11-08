@@ -48,15 +48,6 @@ def after(command: str, expansion: Expansion) -> Abbrev:
     return abbrev
 
 
-# 分からないときは、あとで書き換える目印（<edit>）を入れる
-def _default_branch() -> str:
-    return default_branch() or "<edit>"
-
-
-def _current_branch() -> str:
-    return current_branch() or "<edit>"
-
-
 def _docker_command(xsh: XonshSession) -> str | None:
     """Docker 互換のコマンド。$DOCKER_COMMAND、docker、podman の順に探す"""
     if command := xsh.env.get("DOCKER_COMMAND"):
@@ -65,7 +56,14 @@ def _docker_command(xsh: XonshSession) -> str | None:
     return next((c for c in ("docker", "podman") if shutil.which(c, path=path)), None)
 
 
-def _abbrevs(docker: str | None) -> dict[str, Abbrev]:
+def _abbrevs(xsh: XonshSession, docker: str | None) -> dict[str, Abbrev]:
+    # 分からないときは、あとで書き換える目印（<edit>）を入れる
+    def default() -> str:
+        return default_branch(xsh.env.detype()) or "<edit>"
+
+    def current() -> str:
+        return current_branch(xsh.env.detype()) or "<edit>"
+
     abbrevs = {
         # tools
         "cp": head_only("cp -r"),
@@ -74,10 +72,9 @@ def _abbrevs(docker: str | None) -> dict[str, Abbrev]:
         "la": head_only("ls -a"),
         "untar": head_only("tar xvf"),
         "unzips": head_only("unzip -O sjis"),
-        "envd": head_only("env @(open('.env').read().split())"),
         # dotfiles
         "sx": head_only("dotfiles-reload"),
-        "cx": head_only("code ~/.dotfiles"),
+        "cx": head_only("code $DOTFILES"),
         # git
         "g": head_only("git"),
         "gcl": head_only("git clone"),
@@ -86,7 +83,7 @@ def _abbrevs(docker: str | None) -> dict[str, Abbrev]:
         "gaa": head_only("git add --all"),
         "gmv": head_only("git mv"),
         "grstr": head_only("git restore"),
-        "grstrm": head_only(lambda: f"git restore --source={_default_branch()}"),
+        "grstrm": head_only(lambda: f"git restore --source={default()}"),
         "grstrh": head_only("git restore --source HEAD"),
         "grm": head_only("git rm"),
         "grmc": head_only("git rm --cached"),
@@ -97,9 +94,7 @@ def _abbrevs(docker: str | None) -> dict[str, Abbrev]:
         "gl": head_only("git log"),
         "glg": head_only("git log --graph --oneline --all"),
         "gln": head_only("git log --graph --oneline --all --max-count"),
-        "glmn": head_only(
-            lambda: f"git log --graph --oneline --branches={_default_branch()} --max-count"
-        ),
+        "glmn": head_only(lambda: f"git log --graph --oneline --branches={default()} --max-count"),
         "gsh": head_only("git show"),
         "gs": head_only("git status"),
         "gb": head_only("git branch"),
@@ -113,17 +108,17 @@ def _abbrevs(docker: str | None) -> dict[str, Abbrev]:
         "gf": head_only("git fetch"),
         "gpl": head_only("git pull"),
         "gplo": head_only("git pull origin"),
-        "gploh": head_only(lambda: f"git pull origin {_current_branch()}"),
+        "gploh": head_only(lambda: f"git pull origin {current()}"),
         "gps": head_only("git push"),
         "gpso": head_only("git push origin"),
-        "gpsoh": head_only(lambda: f"git push origin {_current_branch()}"),
+        "gpsoh": head_only(lambda: f"git push origin {current()}"),
         "gst": head_only("git stash"),
         "gsm": head_only("git submodule"),
         "grmt": head_only("git remote"),
         "gwt": head_only("git worktree"),
         "gcf": head_only("git config"),
         "ggc": head_only("git gc"),
-        "@b": after("git", _current_branch),
+        "@b": after("git", current),
     }
     if docker is not None:
         abbrevs.update(_docker_abbrevs(docker))
@@ -165,7 +160,7 @@ def _load_xontrib_(xsh: XonshSession, **_: Any) -> None:
     target: MutableMapping[str, Any] | None = getattr(xsh.builtins, "abbrevs", None)
     if target is None:
         return
-    for word, abbrev in _abbrevs(_docker_command(xsh)).items():
+    for word, abbrev in _abbrevs(xsh, _docker_command(xsh)).items():
         _changes.set(target, word, abbrev)
 
 

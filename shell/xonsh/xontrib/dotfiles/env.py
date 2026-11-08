@@ -18,15 +18,14 @@ _changes = Changes()
 
 def _load_xontrib_(xsh: XonshSession, **_: Any) -> None:
     env = xsh.env
-    dotfiles = dotfiles_dir()
+    dotfiles = dotfiles_dir(env.detype())
     _changes.set(env, "DOTFILES", str(dotfiles))
 
     # 共通層（PATH と環境変数）を読む。重複は env.sh の側で取り除く
-    _changes.set(env, "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE", True)
     xsh.aliases["source-bash"](["--suppress-skip-message", str(dotfiles / "shell" / "common" / "env.sh")])
 
     # 書き込めるファイルでないと、xonsh は黙って None にしてしまうので先に作る
-    logfile = state_dir() / "traceback.log"
+    logfile = state_dir(env.detype()) / "traceback.log"
     logfile.parent.mkdir(parents=True, exist_ok=True)
     logfile.touch()
     _changes.set(env, "XONSH_TRACEBACK_LOGFILE", str(logfile))
