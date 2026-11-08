@@ -1,10 +1,10 @@
 """フォントを入れる。
 
 - 源ノ角ゴシック Code（Source Han Code JP）: https://github.com/adobe-fonts/source-han-code-jp
-- Nerd Fonts Symbols Only: https://github.com/ryanoasis/nerd-fonts （アイコン用。最新のリリースから取る）
+- Nerd Fonts Symbols Only: https://github.com/ryanoasis/nerd-fonts （アイコン用）
 
 置き場所は Linux が ${XDG_DATA_HOME:-~/.local/share}/fonts/dotfiles、mac が ~/Library/Fonts。
-すでにあるものはダウンロードしない。
+どちらも毎回最新のリリースをダウンロードして上書きする（実行すれば最新版になる）。
 """
 
 from __future__ import annotations
@@ -17,10 +17,10 @@ from pathlib import Path
 from ..archive import extract_zip_files
 from ..context import Context
 
-SOURCE_HAN_CODE_JP = (
-    "https://github.com/adobe-fonts/source-han-code-jp/releases/download/2.012R/SourceHanCodeJP.ttc"
-)
 # releases/latest/download/ は最新のリリースのアセットに転送される（API を使わないので回数制限もない）
+SOURCE_HAN_CODE_JP = (
+    "https://github.com/adobe-fonts/source-han-code-jp/releases/latest/download/SourceHanCodeJP.ttc"
+)
 NERD_FONTS_SYMBOLS = (
     "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip"
 )
@@ -36,29 +36,20 @@ def font_dir(ctx: Context) -> Path:
 def install(ctx: Context) -> bool:
     fonts = font_dir(ctx)
     ctx.mkdir(fonts)
-    changed = False
 
-    ttc = fonts / "SourceHanCodeJP.ttc"
-    if ttc.exists():
-        ctx.info(f"ok: {ttc}")
-    else:
-        ctx.download(SOURCE_HAN_CODE_JP, ttc)
-        changed = True
+    # 途中で失敗しても、今あるファイルは壊さない（ctx.download は置き換えるときだけ書き込む）
+    ctx.download(SOURCE_HAN_CODE_JP, fonts / "SourceHanCodeJP.ttc")
 
-    if any(fonts.glob("SymbolsNerdFont*.ttf")):
-        ctx.info(f"ok: {fonts}/SymbolsNerdFont*.ttf")
-    elif ctx.dry_run:
+    if ctx.dry_run:
         ctx.announce("unzip", "NerdFontsSymbolsOnly.zip", "*.ttf", "-d", fonts)
-        changed = True
     else:
         with tempfile.TemporaryDirectory() as tmp:
             archive = Path(tmp) / "NerdFontsSymbolsOnly.zip"
             ctx.download(NERD_FONTS_SYMBOLS, archive)
             ctx.announce("unzip", archive, "*.ttf", "-d", fonts)
             extract_zip_files(archive, fonts, ".ttf")
-        changed = True
 
     # Linux はフォントのキャッシュを作り直す（mac は不要）
-    if changed and ctx.os_name == "linux" and shutil.which("fc-cache"):
+    if ctx.os_name == "linux" and shutil.which("fc-cache"):
         return ctx.run("fc-cache", "-f", fonts)
     return True

@@ -7,7 +7,7 @@ import shutil
 import tarfile
 import zipfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import pytest
 from helpers import errors, output, snapshot
@@ -450,26 +450,30 @@ def test_fonts_downloads_missing_fonts(ctx: Context, home: Path) -> None:
     assert snapshot(home) == []
 
 
-@pytest.mark.usefixtures("no_commands")
-def test_fonts_takes_nerd_fonts_from_the_latest_release(
-    ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    downloaded: list[str] = []
-
-    def fake_download(url: str, dest: Path) -> None:
+def fake_font_download(downloaded: list[str]) -> Callable[[str, Path], None]:
+    def download(url: str, dest: Path) -> None:
         downloaded.append(url)
         if dest.suffix == ".zip":
             with zipfile.ZipFile(dest, "w") as zf:
-                zf.writestr("SymbolsNerdFontMono-Regular.ttf", b"font")
+                zf.writestr("SymbolsNerdFontMono-Regular.ttf", b"new")
                 zf.writestr("README.md", b"readme")
         else:
-            dest.write_bytes(b"ttc")
+            dest.write_bytes(b"new")
 
-    monkeypatch.setattr(ctx, "download", fake_download)
+    return download
+
+
+@pytest.mark.usefixtures("no_commands")
+def test_fonts_downloads_from_the_latest_releases(
+    ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    downloaded: list[str] = []
+    monkeypatch.setattr(ctx, "download", fake_font_download(downloaded))
     assert fonts.install(ctx)
-    assert downloaded[1] == (
-        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip"
-    )
+    assert downloaded == [
+        "https://github.com/adobe-fonts/source-han-code-jp/releases/latest/download/SourceHanCodeJP.ttc",
+        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip",
+    ]
     font_dir = home / ".local/share/fonts/dotfiles"
     assert sorted(p.name for p in font_dir.iterdir()) == [
         "SourceHanCodeJP.ttc",
@@ -478,14 +482,19 @@ def test_fonts_takes_nerd_fonts_from_the_latest_release(
 
 
 @pytest.mark.usefixtures("all_commands")
-def test_fonts_does_nothing_when_present(ctx: Context, home: Path) -> None:
+def test_fonts_overwrites_existing_fonts(ctx: Context, home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     font_dir = home / ".local/share/fonts/dotfiles"
     font_dir.mkdir(parents=True)
-    (font_dir / "SourceHanCodeJP.ttc").touch()
-    (font_dir / "SymbolsNerdFontMono-Regular.ttf").touch()
+    (font_dir / "SourceHanCodeJP.ttc").write_bytes(b"old")
+    (font_dir / "SymbolsNerdFontMono-Regular.ttf").write_bytes(b"old")
+    downloaded: list[str] = []
+    monkeypatch.setattr(ctx, "download", fake_font_download(downloaded))
+    runs = record_runs(ctx, monkeypatch)
     assert fonts.install(ctx)
-    assert "fc-cache" not in output(ctx)
-    assert "curl" not in output(ctx)
+    assert len(downloaded) == 2
+    assert (font_dir / "SourceHanCodeJP.ttc").read_bytes() == b"new"
+    assert (font_dir / "SymbolsNerdFontMono-Regular.ttf").read_bytes() == b"new"
+    assert runs == [["fc-cache", "-f", str(font_dir)]]
 
 
 def test_fonts_on_mac_go_to_library_fonts(ctx: Context, home: Path) -> None:
