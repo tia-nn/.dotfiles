@@ -1,0 +1,6 @@
+# xonsh の設定（shell/xonsh）のテスト用。installer/tools/xonsh.py が入れるものと同じものを、版を固定して入れる
+xonsh[full]==0.25.0
+xontrib-abbrevs==0.1.1
+xontrib-vox==0.0.1
+pytest==9.0.3
+mypy==2.4.1

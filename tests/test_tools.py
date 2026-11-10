@@ -355,24 +355,97 @@ def test_command_env_finds_asdf_and_shims(ctx: Context, home: Path, monkeypatch:
 # --- xonsh ---
 
 
-def test_xonsh_creates_a_venv_and_links_it(ctx: Context, home: Path) -> None:
+def asdf_python(home: Path, version: str = "3.14.2") -> Path:
+    """asdf で Python を入れて、全体の既定にした状態にする"""
+    (home / ".tool-versions").write_text(f"python {version}\n")
+    python = home / ".asdf/installs/python" / version / "bin/python3"
+    python.parent.mkdir(parents=True)
+    python.touch()
+    return python
+
+
+def test_xonsh_creates_a_venv_with_the_asdf_python_and_links_it(ctx: Context, home: Path) -> None:
+    base = asdf_python(home)
+    before = snapshot(home)
     ctx.dry_run = True
     assert xonsh.install(ctx)
     venv = home / ".local/share/dotfiles/venvs/xonsh"
     out = output(ctx)
-    assert f"-m venv {venv}" in out
-    assert f"{venv}/bin/python -m pip install 'xonsh[full]'" in out
+    assert f"[dry-run] {base} -m venv {venv}\n" in out
+    assert f"{venv}/bin/python -m pip install --upgrade pip" in out
+    assert f"{venv}/bin/python -m pip install 'xonsh[full]' xontrib-abbrevs xontrib-vox" in out
     assert f"[dry-run] ln -s {venv}/bin/xonsh {home}/.local/bin/xonsh" in out
-    assert snapshot(home) == []
+    assert snapshot(home) == before
 
 
-def test_xonsh_only_links_when_already_installed(ctx: Context, home: Path) -> None:
-    xonsh_bin = home / ".local/share/dotfiles/venvs/xonsh/bin/xonsh"
-    xonsh_bin.parent.mkdir(parents=True)
-    xonsh_bin.touch()
+def test_xonsh_dry_run_before_asdf_installs_python(ctx: Context, home: Path) -> None:
+    """新しい PC の dry-run では、asdf がまだ Python を入れていない"""
+    ctx.dry_run = True
     assert xonsh.install(ctx)
-    assert os.readlink(home / ".local/bin/xonsh") == str(xonsh_bin)
+    assert "[dry-run] '<python in ~/.tool-versions>' -m venv" in output(ctx)
+
+
+@pytest.mark.parametrize(
+    ("tool_versions", "message"),
+    [
+        ("", "no python in ~/.tool-versions"),
+        ("python 3.10.14\n", "python 3.10.14 in ~/.tool-versions is too old; 3.11 or later"),
+        ("python 3.14.2\n", "3.14.2/bin/python3 not found"),
+    ],
+)
+def test_xonsh_fails_without_a_usable_asdf_python(
+    ctx: Context, home: Path, tool_versions: str, message: str
+) -> None:
+    (home / ".tool-versions").write_text(tool_versions)
+    assert not xonsh.install(ctx)
+    assert message in errors(ctx)
+    assert "-m venv" not in output(ctx)
+
+
+def test_xonsh_fails_when_the_venv_uses_an_old_python(ctx: Context, home: Path) -> None:
+    """以前は install.sh の Python（mac では 3.9）で venv を作っていた"""
+    venv = home / ".local/share/dotfiles/venvs/xonsh"
+    venv.mkdir(parents=True)
+    (venv / "pyvenv.cfg").write_text("home = /usr/bin\nversion = 3.9.6\n")
+    assert not xonsh.install(ctx)
+    assert "uses python 3.9, but 3.11 or later is required" in errors(ctx)
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"), [("3.14.2", (3, 14)), ("3.11", (3, 11)), ("3.13.0rc1", (3, 13)), ("system", None)]
+)
+def test_xonsh_parse_version(text: str, expected: tuple[int, int] | None) -> None:
+    assert xonsh.parse_version(text) == expected
+
+
+def _fake_venv(home: Path, *files: str) -> Path:
+    """venv の代わり。files に挙げたファイルだけがある"""
+    venv = home / ".local/share/dotfiles/venvs/xonsh"
+    for name in ("bin/python", *files):
+        (venv / name).parent.mkdir(parents=True, exist_ok=True)
+        (venv / name).touch()
+    return venv
+
+
+SITE = "lib/python3.14/site-packages"
+
+
+def test_xonsh_only_links_when_everything_is_installed(ctx: Context, home: Path) -> None:
+    venv = _fake_venv(home, "bin/xonsh", f"{SITE}/xontrib/abbrevs.py", f"{SITE}/xontrib/vox.py")
+    assert xonsh.install(ctx)
+    assert os.readlink(home / ".local/bin/xonsh") == str(venv / "bin/xonsh")
     assert "pip" not in output(ctx)
+
+
+def test_xonsh_installs_only_missing_xontribs_into_an_existing_venv(ctx: Context, home: Path) -> None:
+    """xontrib を入れるようにする前に作った venv にも、足りないものだけを足す"""
+    venv = _fake_venv(home, "bin/xonsh", f"{SITE}/xontrib/vox.py")
+    ctx.dry_run = True
+    assert xonsh.install(ctx)
+    out = output(ctx)
+    assert f"[dry-run] {venv}/bin/python -m pip install xontrib-abbrevs\n" in out
+    assert "-m venv" not in out
+    assert "--upgrade pip" not in out
 
 
 def test_xonsh_venv_follows_xdg_data_home(

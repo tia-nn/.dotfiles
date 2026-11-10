@@ -8,6 +8,7 @@ Entry(リポジトリ内のパス, リンクの置き場所, os="all" | "linux" 
 from installer.links import Entry
 
 LINKS = [
-    # xonsh は ~/.config/xonsh/rc.d の *.py を名前順に読む（~/.xonshrc は PC ごとの設定用に空けておく）
-    Entry("shell/xonsh/rc.d", "~/.config/xonsh/rc.d"),
+    # xonsh は ~/.config/xonsh/rc.d の *.py / *.xsh を名前順に読む。入口のファイルだけをリンクし、
+    # PC ごとの設定はその後ろの名前（90_local.xsh など）で同じ場所に置けるようにする
+    Entry("shell/xonsh/rc.d/50_dotfiles.py", "~/.config/xonsh/rc.d/50_dotfiles.py"),
 ]

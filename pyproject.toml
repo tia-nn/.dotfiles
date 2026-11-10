@@ -1,4 +1,7 @@
 # インストーラ（installer/）と xonsh の設定（shell/xonsh/）の開発ツールの設定。パッケージとして配布はしない。
+#   - インストーラは Python 3.9 でも動かす（mac の Command Line Tools の python3）。
+#   - xonsh の設定は、xonsh を動かす最新の Python（3.14）だけで動けばよい。
+#     mypy は Python のバージョンを1つしか指定できないので、shell/xonsh/mypy.ini に分けてある。
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -10,20 +13,20 @@ target-version = "py39"
 line-length = 110
 include = ["install.py", "links.py", "packages.py", "installer/**/*.py", "tests/**/*.py", "shell/xonsh/**/*.py"]
 
+[tool.ruff.per-file-target-version]
+"shell/xonsh/**/*.py" = "py314"
+"tests/xonshrc/**/*.py" = "py314"
+
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["installer", "lib"]
-
-[tool.ruff.lint.per-file-ignores]
-# xonsh の rc は、未定義の名前や使っていない import などの誤りだけを確認する（F）
-"shell/xonsh/rc.d/*.py" = ["E", "W", "I", "UP", "B", "SIM"]
+known-first-party = ["installer", "xontrib.dotfiles"]
 
 [tool.mypy]
 python_version = "3.9"
-# shell/xonsh/rc.d は xonsh の中で動くので対象外。lib/ はテストからの import をたどって確認する
 files = ["install.py", "links.py", "packages.py", "installer", "tests"]
+exclude = ["^tests/xonshrc/"]
 strict = true
-mypy_path = ["tests", "shell/xonsh"]
+mypy_path = ["tests"]
 cache_dir = "/tmp/.mypy_cache"

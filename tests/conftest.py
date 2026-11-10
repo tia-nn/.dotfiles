@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import io
+import sys
 from pathlib import Path
 
 import pytest
 from helpers import REPO_ROOT
 
 from installer.context import Context
+
+# shell/xonsh（xonsh の設定）のテストは、xonsh を動かす Python 3.14 で実行する（tests/run.sh pytest-xonsh）。
+# インストーラのテストを実行する古い Python では、新しい書き方を読めないので集めない
+collect_ignore = ["xonshrc"] if sys.version_info < (3, 14) else []
 
 
 @pytest.fixture

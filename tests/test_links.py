@@ -169,6 +169,50 @@ def test_make_link_changes_nothing_in_dry_run(ctx: Context, home: Path, src: Pat
     assert not ctx.backup_dir.exists()
 
 
+@pytest.fixture
+def repo(ctx: Context, tmp_path: Path) -> Path:
+    """リポジトリの代わり。src/file をリンク元にする"""
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / "src" / "file").write_text("new\n")
+    ctx.dotfiles = repo
+    return repo
+
+
+def test_make_link_replaces_a_parent_linked_into_the_repository(ctx: Context, home: Path, repo: Path) -> None:
+    """以前ディレクトリごとリンクしていた場所の中に、リポジトリを書き換えずにリンクを作る"""
+    (home / "dir").symlink_to(repo / "src")
+    assert make_link(Link(repo / "src" / "file", home / "dir" / "file"), ctx)
+    assert not (home / "dir").is_symlink()
+    assert os.readlink(home / "dir" / "file") == str(repo / "src" / "file")
+    assert os.readlink(ctx.backup_dir / "dir") == str(repo / "src")
+    assert sorted(p.name for p in (repo / "src").iterdir()) == ["file"]
+    assert (repo / "src" / "file").read_text() == "new\n"
+
+
+def test_make_link_keeps_a_parent_linked_outside_the_repository(
+    ctx: Context, home: Path, repo: Path, tmp_path: Path
+) -> None:
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (home / "dir").symlink_to(elsewhere)
+    assert make_link(Link(repo / "src" / "file", home / "dir" / "file"), ctx)
+    assert os.readlink(home / "dir") == str(elsewhere)
+    assert os.readlink(elsewhere / "file") == str(repo / "src" / "file")
+
+
+def test_make_link_replacing_a_parent_changes_nothing_in_dry_run(
+    ctx: Context, home: Path, repo: Path
+) -> None:
+    (home / "dir").symlink_to(repo / "src")
+    before = snapshot(home), snapshot(repo)
+    ctx.dry_run = True
+    assert make_link(Link(repo / "src" / "file", home / "dir" / "file"), ctx)
+    assert f"[dry-run] mv {home}/dir" in output(ctx)
+    assert f"[dry-run] ln -s {repo}/src/file {home}/dir/file" in output(ctx)
+    assert (snapshot(home), snapshot(repo)) == before
+
+
 def test_commands_are_shown_quoted(ctx: Context, home: Path, src: Path) -> None:
     dest = home / "a b" / "it's"
     assert make_link(Link(src, dest), ctx)

@@ -36,7 +36,7 @@ cd ~/.dotfiles
 |---|---|
 | `git` | `git config --global` の設定（ユーザー名など） |
 | `asdf` | [asdf](https://asdf-vm.com/) を `~/.local/bin` に入れ、Python・Node.js・Haxe・Neko を入れて既定のバージョンにする |
-| `xonsh` | xonsh を専用の venv に入れ、`~/.local/bin/xonsh` にリンクする |
+| `xonsh` | xonsh と xontrib（abbrevs・vox）を、asdf の Python（`~/.tool-versions`）で作った専用の venv に入れ、`~/.local/bin/xonsh` にリンクする。足りないものだけを入れる |
 | `npm` | npm のグローバルインストール先を `${XDG_DATA_HOME:-~/.local/share}/npm` にする（sudo なしで `npm install -g` できる） |
 | `fonts` | 源ノ角ゴシック Code と Nerd Fonts Symbols を入れる |
 
@@ -68,10 +68,23 @@ PATH と環境変数は [`shell/common/env.sh`](shell/common/env.sh) にまと�
 
 ### xonsh
 
-`shell/xonsh/rc.d/` を `~/.config/xonsh/rc.d` にリンクする。xonsh はここにある `*.py` を名前の順に読む（xonsh の標準の仕組み）。
+入口の [`shell/xonsh/rc.d/50_dotfiles.py`](shell/xonsh/rc.d/50_dotfiles.py) を `~/.config/xonsh/rc.d/50_dotfiles.py` にリンクする。xonsh は `~/.config/xonsh/rc.d` にある `*.py` / `*.xsh` を名前の順に読む（xonsh の標準の仕組み）。設定の本体は [`shell/xonsh/xontrib/dotfiles/`](shell/xonsh/xontrib/dotfiles/) にあり、入口から読む。
 
-- `~/.xonshrc` は使っていないので、その PC だけの設定を書く場所にできる。
-- rc.d は `xonsh -c` やスクリプトの実行でも読まれるので、xontrib・abbrevs などの対話用の設定は対話シェルでだけ読む。
+- その PC だけの設定は、`~/.config/xonsh/rc.d` に入口より後ろの名前（`90_local.xsh` など）で置く。dotfiles の設定の後に読まれるので、上書きできる。`~/.xonshrc` は rc.d より先に読まれるため、上書きには使えない。
+- 以前のように `~/.config/xonsh/rc.d` がリポジトリへのリンクになっていたら、`install.sh link` がそのリンクを退避して、普通のディレクトリにする。
+- 設定は xontrib に分けてある。rc.d は `xonsh -c` やスクリプトの実行でも読まれるので、対話用のものは対話シェルでだけ読む。読む順番は [`xontrib/dotfiles/__init__.py`](shell/xonsh/xontrib/dotfiles/__init__.py) にある。
+
+  | xontrib | 読むとき | 中身 |
+  |---|---|---|
+  | `dotfiles.env` | 常に | `$DOTFILES`、`shell/common/env.sh`、traceback のログ |
+  | `dotfiles.aliases` | 常に | `git-prune-localbranch`、`dotfiles-reload` |
+  | `abbrevs`・`vox`（外部） | 対話 | `install.sh tools xonsh` で入れる。入っていなければ案内が出て、ほかは読む |
+  | `dotfiles.prompt` | 対話 | プロンプト・入力・履歴・補完の `$変数` |
+  | `dotfiles.abbrevs` | 対話 | abbrevs（xontrib abbrevs が入っているときだけ） |
+  | `dotfiles.envstack` | 対話 | `loadenv`、`pushe`、`pope`、`push-and-loadenv` |
+
+- 設定を変えたら `dotfiles-reload`（abbrev では `sx`）で読み込み直せる。1つだけなら `xontrib reload dotfiles.prompt` のようにする。
+- xontrib を足すときは、`_load_xontrib_` で `Changes`（[`_changes.py`](shell/xonsh/xontrib/dotfiles/_changes.py)）を通して値を変え、`_unload_xontrib_` で元に戻す。`__init__.py` の一覧にも足す。
 - 環境変数
   - `$DOCKER_COMMAND`: abbrevs で使う Docker 互換のコマンド（未設定なら docker、なければ podman）
   - `$GIT_DEFAULTBRANCH`: abbrevs などで使うデフォルトブランチ名（未設定なら git の `init.defaultBranch`）
@@ -88,7 +101,7 @@ PATH と環境変数は [`shell/common/env.sh`](shell/common/env.sh) にまと�
 | リンクする設定ファイル | [`links.py`](links.py) |
 | OS のパッケージ、asdf のプラグインと既定のバージョン | [`packages.py`](packages.py) |
 | PATH・環境変数 | [`shell/common/env.sh`](shell/common/env.sh)（POSIX sh で書く） |
-| xonsh の設定 | [`shell/xonsh/rc.d/`](shell/xonsh/rc.d/)（`.py` で書く） |
+| xonsh の設定 | [`shell/xonsh/xontrib/dotfiles/`](shell/xonsh/xontrib/dotfiles/)（`.py` で書く） |
 | git の設定 | [`installer/tools/git.py`](installer/tools/git.py) |
 
 asdf で入れたツールのバージョンを上げるときは手で行う（`~/.tool-versions` にあるものはインストーラが変えないため）。
@@ -110,18 +123,21 @@ asdf install nodejs <バージョン> && asdf set -u nodejs <バージョン>
 │   ├── common/         # どのシェルからも読む PATH・環境変数
 │   ├── bash/
 │   ├── zsh/
-│   └── xonsh/          # rc.d/ と、そこから使う lib/
-└── tests/              # pytest のテストと Docker のファイル
+│   └── xonsh/          # rc.d/（入口）と xontrib/dotfiles/（設定の本体）
+└── tests/              # pytest のテストと Docker のファイル（xonshrc/ は xonsh の設定のテスト）
 ```
 
 ## テスト
 
-Docker（Docker Desktop など）で、Debian・Fedora・Python 3.9 のコンテナを使う。テストはネットワークを使わない。
+Docker（Docker Desktop など）で、Debian・Fedora・Python 3.9・Python 3.14 のコンテナを使う。テストはネットワークを使わない。
+
+インストーラは Python 3.9（mac の Command Line Tools の python3）でも動くように、Python 3.9 で型を確かめる。xonsh の設定（`shell/xonsh/`）は xonsh を動かす最新の Python だけで動けばよいので、そのテスト（`tests/xonshrc/`）は Python 3.14 と、`install.sh tools xonsh` が入れるのと同じ xonsh・xontrib で実行する。
 
 ```sh
 docker compose run --rm debian    # shellcheck, ruff, pytest
 docker compose run --rm fedora
 docker compose run --rm py39      # 対応する最も古い Python で mypy, pytest
+docker compose run --rm py314     # xonsh の設定の mypy, pytest
 ```
 
 一部だけ実行する例:
